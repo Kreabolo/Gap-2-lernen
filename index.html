@@ -1,0 +1,976 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f6b66">
+<meta name="description" content="Lern-App für die GAP II Versicherungen und Finanzanlagen: Lernzettel, Karteikarten und Quiz.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GAP II">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>GAP II Trainer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: ein Arbeitsblatt im Policen-Stil. Kopfzeile mit Prüfungs-Countdown, Themenleiste, darunter drei Modi (Lernzettel, Karteikarten, Quiz). */
+:root{
+  --paper:#f2f5f4;
+  --sheet:#ffffff;
+  --ink:#14302e;
+  --ink-soft:#4b6461;
+  --line:#d3dedb;
+  --petrol:#0f6b66;
+  --petrol-ink:#ffffff;
+  --marker:#f4d23c;
+  --marker-ink:#2b2400;
+  --ok:#1f7a45;
+  --ok-bg:#e1f2e7;
+  --bad:#b23a2e;
+  --bad-bg:#f8e3e0;
+  --chip:#e5ecea;
+  --shadow:0 1px 0 rgba(20,48,46,.06),0 8px 24px -16px rgba(20,48,46,.35);
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"Public Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0f1817;--sheet:#16211f;--ink:#e3eeeb;--ink-soft:#9db3af;--line:#2a3a37;
+  --petrol:#3fb3a9;--petrol-ink:#06201d;--marker:#e9c62e;--marker-ink:#241e00;
+  --ok:#5cc489;--ok-bg:#16301f;--bad:#f08a7d;--bad-bg:#3a1d19;--chip:#1f2c2a;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 28px -18px rgba(0,0,0,.8);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#0f1817;--sheet:#16211f;--ink:#e3eeeb;--ink-soft:#9db3af;--line:#2a3a37;
+  --petrol:#3fb3a9;--petrol-ink:#06201d;--marker:#e9c62e;--marker-ink:#241e00;
+  --ok:#5cc489;--ok-bg:#16301f;--bad:#f08a7d;--bad-bg:#3a1d19;--chip:#1f2c2a;
+  --shadow:0 1px 0 rgba(0,0,0,.3),0 10px 28px -18px rgba(0,0,0,.8);color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.15}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--marker);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:.82em;letter-spacing:.02em}
+.label{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--ink-soft)}
+mark{background:linear-gradient(transparent 55%,var(--marker) 55%);color:inherit;padding:0 .1em}
+
+/* Kopf */
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;border-bottom:2px solid var(--ink);padding-bottom:14px}
+.brand h1{font-size:clamp(1.9rem,4.5vw,2.8rem);font-weight:800;letter-spacing:-.02em}
+.brand h1 span{color:var(--petrol)}
+.brand p{margin:4px 0 0;color:var(--ink-soft);font-size:.95rem}
+.countdown{display:flex;gap:18px;align-items:flex-end}
+.cd-num{font-family:var(--f-display);font-weight:800;font-size:2.6rem;line-height:1;font-variant-numeric:tabular-nums}
+.cd-box{display:flex;flex-direction:column;gap:2px}
+.cd-box small{color:var(--ink-soft);font-size:.8rem}
+
+/* Statuszeile */
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.stat{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.stat b{font-family:var(--f-display);font-size:1.5rem;font-variant-numeric:tabular-nums;line-height:1}
+.bar{height:6px;border-radius:3px;background:var(--chip);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--petrol);width:0;transition:width .4s}
+
+/* Themen */
+.topics{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--sheet);border-radius:999px;padding:6px 12px;font-size:.88rem;display:inline-flex;gap:8px;align-items:center}
+.chip .pts{font-family:var(--f-mono);font-size:.72rem;color:var(--ink-soft)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip[aria-pressed="true"] .pts{color:var(--paper);opacity:.75}
+
+/* Tabs */
+nav.modes{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+nav.modes button{background:none;border:0;padding:10px 16px;font-weight:700;font-family:var(--f-display);font-size:1.05rem;color:var(--ink-soft);border-bottom:3px solid transparent;margin-bottom:-1px}
+nav.modes button[aria-selected="true"]{color:var(--ink);border-color:var(--petrol)}
+nav.modes .count{font-family:var(--f-mono);font-size:.72rem;margin-left:6px;opacity:.7}
+
+.panel{display:flex;flex-direction:column;gap:16px}
+
+/* Lernzettel */
+.sum{background:var(--sheet);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.sum>summary{list-style:none;cursor:pointer;padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sum>summary::-webkit-details-marker{display:none}
+.sum>summary h2{font-size:1.3rem}
+.sum>summary .meta{display:flex;gap:10px;align-items:center;color:var(--ink-soft);font-size:.85rem;flex-wrap:wrap;justify-content:flex-end}
+.sum>summary .tog{font-family:var(--f-mono);font-size:1.1rem;transition:transform .2s}
+.sum[open]>summary .tog{transform:rotate(45deg)}
+.sum-body{padding:0 18px 18px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,280px);gap:22px;border-top:1px dashed var(--line);padding-top:16px}
+.sum-body section{min-width:0}
+.sum-body h3{font-size:1.02rem;margin:14px 0 6px}
+.sum-body h3:first-child{margin-top:0}
+.sum-body ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:4px;max-width:65ch}
+.keys{background:var(--paper);border-radius:10px;padding:14px;align-self:start;display:flex;flex-direction:column;gap:8px}
+.keys dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:.9rem}
+.keys dt{font-family:var(--f-mono);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--petrol)}
+.keys dd{margin:0;min-width:0}
+.src{font-size:.78rem;color:var(--ink-soft);margin-top:12px}
+.tag-px{font-family:var(--f-mono);font-size:.66rem;background:var(--chip);border-radius:4px;padding:1px 5px;color:var(--ink-soft);white-space:nowrap}
+
+/* Karteikarten */
+.deckbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.boxes{display:flex;gap:6px;flex-wrap:wrap}
+.box{font-family:var(--f-mono);font-size:.75rem;border:1px solid var(--line);border-radius:6px;padding:4px 8px;background:var(--sheet)}
+.card{perspective:1400px;min-height:300px;cursor:pointer;border:0;background:none;padding:0;width:100%;text-align:left}
+.card-inner{position:relative;min-height:300px;transition:transform .5s cubic-bezier(.2,.7,.2,1);transform-style:preserve-3d;display:grid}
+.card.flipped .card-inner{transform:rotateY(180deg)}
+.face{grid-area:1/1;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:var(--sheet);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px 24px;display:flex;flex-direction:column;gap:14px;
+  background-image:repeating-linear-gradient(transparent 0 31px,var(--line) 31px 32px);background-position:0 70px}
+.face.back{transform:rotateY(180deg);background-image:none;border-top:6px solid var(--petrol)}
+.face .q{font-family:var(--f-display);font-size:clamp(1.25rem,3vw,1.6rem);font-weight:700;line-height:1.25;text-wrap:balance}
+.face .a{font-size:1.05rem;max-width:62ch;white-space:pre-line}
+.face .hint{margin-top:auto;color:var(--ink-soft);font-size:.82rem}
+.rate{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:1px solid var(--line);background:var(--sheet);border-radius:10px;padding:10px 16px;font-weight:700}
+.btn.primary{background:var(--petrol);border-color:var(--petrol);color:var(--petrol-ink)}
+.btn.good{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.btn.again{background:var(--bad-bg);border-color:var(--bad);color:var(--bad)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent}
+
+/* Quiz */
+.qcard{background:var(--sheet);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px 24px;display:flex;flex-direction:column;gap:16px}
+.qhead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+.qtext{font-family:var(--f-display);font-size:clamp(1.15rem,2.6vw,1.4rem);font-weight:700;line-height:1.3;max-width:62ch}
+.opts{display:flex;flex-direction:column;gap:8px}
+.opt{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;text-align:left;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:10px 12px}
+.opt .k{font-family:var(--f-mono);font-size:.8rem;border:1px solid var(--line);border-radius:6px;display:grid;place-items:center;height:24px;background:var(--sheet)}
+.opt:hover:not(:disabled){border-color:var(--petrol)}
+.opt.right{background:var(--ok-bg);border-color:var(--ok)}
+.opt.wrong{background:var(--bad-bg);border-color:var(--bad)}
+.opt:disabled{cursor:default}
+.explain{border-left:4px solid var(--marker);background:var(--paper);border-radius:0 10px 10px 0;padding:12px 14px;white-space:pre-line;max-width:70ch}
+.explain .label{display:block;margin-bottom:4px}
+.result{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.result .big{font-family:var(--f-display);font-weight:800;font-size:3.4rem;line-height:1;font-variant-numeric:tabular-nums}
+.empty{color:var(--ink-soft);background:var(--sheet);border:1px dashed var(--line);border-radius:12px;padding:20px;text-align:center}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+select{font:inherit;color:inherit;background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+footer{color:var(--ink-soft);font-size:.8rem;border-top:1px solid var(--line);padding-top:12px}
+
+@media (max-width:720px){
+  .sum-body{grid-template-columns:minmax(0,1fr)}
+  .stats{grid-template-columns:minmax(0,1fr)}
+  .countdown{width:100%;justify-content:flex-start}
+  nav.modes{overflow-x:auto}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="label">Kaufmann/-frau für Versicherungen und Finanzanlagen · AO 2022</div>
+      <h1>GAP II <span>Trainer</span></h1>
+      <p>Lernzettel, Karteikarten und Quiz aus deinem GAP2-Ordner. Bedingungen: PROXIMUS Bedingungswerk 5.</p>
+    </div>
+    <div class="countdown" aria-live="polite">
+      <div class="cd-box"><span class="cd-num" id="cdDays">–</span><small>Tage bis Fachteil<br>Di 24.11.2026, 08:00</small></div>
+      <div class="cd-box"><span class="cd-num" id="cdDays2">–</span><small>Tage bis WiSo<br>Mi 25.11.2026, 14:00</small></div>
+    </div>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><span class="label">Karteikarten sicher</span><b id="stCards">0 / 0</b><div class="bar"><i id="barCards"></i></div></div>
+    <div class="stat"><span class="label">Quiz-Trefferquote</span><b id="stQuiz">–</b><div class="bar"><i id="barQuiz"></i></div></div>
+    <div class="stat"><span class="label">Offene Fehler im Quiz</span><b id="stWrong">0</b><small style="color:var(--ink-soft)">werden im Modus „Fehler wiederholen“ abgefragt</small></div>
+  </div>
+
+  <div>
+    <div class="label" style="margin-bottom:8px">Themen <span style="text-transform:none;letter-spacing:0;font-weight:400">· Punkte in der Prüfung laut Einstieg GAP II</span></div>
+    <div class="topics" id="topics" role="group" aria-label="Themen filtern"></div>
+  </div>
+
+  <nav class="modes" role="tablist">
+    <button role="tab" id="tab-sum" aria-selected="true" data-mode="sum">Lernzettel</button>
+    <button role="tab" id="tab-cards" aria-selected="false" data-mode="cards">Karteikarten<span class="count" id="cntCards"></span></button>
+    <button role="tab" id="tab-quiz" aria-selected="false" data-mode="quiz">Quiz<span class="count" id="cntQuiz"></span></button>
+  </nav>
+
+  <section class="panel" id="panel-sum"></section>
+  <section class="panel" id="panel-cards" hidden></section>
+  <section class="panel" id="panel-quiz" hidden></section>
+
+  <footer>
+    Grundlage: IHK-Abschlussprüfungen Sommer 24 bis Winter 25/26 mit Lösungshinweisen, WiSo-Lösungen, KBF 3 und KBF 6 (Berufsbildungswerk, Stand 2026), RW-Skript 2026, Einstieg in die Prüfungsvorbereitung GAP II, deine Lernzusammenfassungen und die Fondsübersicht.
+    Werte mit <span class="tag-px">PX</span> gelten für das PROXIMUS Bedingungswerk 5 aus den Aufgaben. Dein Lernstand wird nur in diesem Browser gespeichert.
+  </footer>
+</div>
+
+<script>
+/* ---------- Themen ---------- */
+const TOPICS = [
+  {id:"mobil", name:"Mobilität & Reisen", pts:"15*"},
+  {id:"freizeit", name:"Berufsausübung & Freizeit", pts:"15*"},
+  {id:"wohnen", name:"Wohnen & Wohneigentum", pts:"Reg."},
+  {id:"gesund", name:"Gesundheit, Krankheit, Pflege", pts:"10"},
+  {id:"vorsorge", name:"Alter & Vermögen", pts:"10"},
+  {id:"finanz", name:"Finanzanlagen", pts:"15"},
+  {id:"einkommen", name:"Einkommen & Hinterbliebene", pts:"10"},
+  {id:"rw", name:"Rechnungswesen", pts:"20"},
+  {id:"wiso", name:"WiSo", pts:"10 %"}
+];
+
+/* ---------- Lernzettel ---------- */
+const SUMS = {
+mobil:{
+  sections:[
+    ["Pflichtversicherung und Antrag",[
+      "Versicherungspflicht für die Kfz-Haftpflicht, sobald das Fahrzeug auf öffentlichen Wegen genutzt wird (§ 1 PflVG). Mindestversicherungssummen, Leitgedanke ist der Schutz des Verkehrsopfers.",
+      "Kontrahierungszwang (§ 5 PflVG): Der Versicherer muss den KH-Antrag annehmen, mindestens zu den gesetzlichen Mindestsummen. Für Kasko gilt er nicht.",
+      "Ausnahme (§ 5 Abs. 4): Der Versicherer hatte einen Vorvertrag desselben Kunden nach einem Schadenfall gekündigt. Ein Rücktritt eines anderen Versicherers reicht nicht.",
+      "Ablehnung nur schriftlich innerhalb von 2 Wochen nach Antragseingang. Danach gilt der KH-Antrag als angenommen (Annahmefiktion).",
+      "Endet der KH-Schutz, meldet der Versicherer das der Zulassungsstelle, um aus der Nachhaftung (§ 117 VVG, Ziffer C.5) zu kommen.",
+      "Widerrufsrecht des Kunden: 14 Tage nach Erhalt von Police und allen Informationen (§ 8 VVG)."
+    ]],
+    ["Vorläufige Deckung (eVB)",[
+      "Eigenständiger Vertrag vor der Einigung über den Hauptvertrag, Schutz ab sofort ohne Risikoprüfung.",
+      "Endet durch: Hauptvertrag kommt zustande (Erstbeitrag gezahlt), Nichtzahlung des Erstbeitrags, Kündigung (Frist 2 Wochen), Widerruf des Kunden.",
+      "Schutzbrief: vorläufige Deckung ab Zulassung. Kasko: keine vorläufige Deckung ohne ausdrückliche Zusage."
+    ]],
+    ["Schadenfreiheitsrabatt (SFR)",[
+      "Ersteinstufung Pkw: SF 0 mit 85 %. Sondereinstufung über ein Elternteil: SF 1 (52 %), wenn Vater oder Mutter einen Pkw beim selben Versicherer in mindestens SF 1 hat und seit mindestens 1 Jahr den Führerschein besitzt.",
+      "Sondereinstufung SF 3 als Zweitwagen von Ehepartnern: Erstfahrzeug mindestens SF 4 beim selben Versicherer, Führerschein seit über 1 Jahr, beide mindestens 23 Jahre. Gilt nicht, wenn das Kind das Auto fahren soll.",
+      "Rabattübertragung von Eltern oder Großeltern: Fahrzeug wurde überwiegend vom Kind gefahren, schriftliche Erklärung beider, vollständige Abtretung, Führerscheinkopie. Übertragen wird höchstens so viel, wie das Kind seit dem Führerschein hätte erfahren können.",
+      "Vollkasko wird in dieselbe SF-Klasse wie die Haftpflicht eingestuft.",
+      "Campingfahrzeuge: keine Sondereinstufung (SF 0 = 100 %), höchstens SF 10 (45 %), keine Typ- und Regionalklassen. Typ- und Regionalklassen gibt es nur für Pkw.",
+      "Rückkauf eines Schadens innerhalb von 6 Monaten nach Regulierung. Bis 500 € Schaden muss der Versicherer den Kunden darauf hinweisen."
+    ]],
+    ["Unterbrechung und Stilllegung",[
+      "Bis 6 Monate: Einstufung, als hätte es keine Unterbrechung gegeben.",
+      "Über 6 bis 12 Monate: Einstufung wie vor der Unterbrechung, keine Besserstufung.",
+      "Über 12 Monate: für jedes weitere angefangene Kalenderjahr wird ein schadenfreies Jahr abgezogen.",
+      "Über 7 Jahre: der SFR verfällt, Neueinstufung.",
+      "Stilllegung ab 2 Wochen mit Abmeldebescheinigung: Ruheversicherung, beitragsfrei für KH und Teilkasko. Fahrten zur Zulassungsstelle mit ungestempeltem Kennzeichen sind versichert.",
+      "Wiederanmeldung innerhalb von 18 Monaten, sonst endet der Vertrag ohne Kündigung."
+    ]],
+    ["Kasko, KH und Schutzbrief im Schadenfall",[
+      "Teilkasko: Glas, Wild (Zusammenstoß mit Tieren aller Art), Entwendung, Brand, Sturm. Kein Einfluss auf den SFR, Selbstbeteiligung beachten.",
+      "Vollkasko zusätzlich: selbst verschuldete Unfälle und mut- oder böswillige Handlungen Dritter (Vandalismus, Kratzer). Ausweichen vor Wild ohne Zusammenstoß ist ein Vollkaskoschaden.",
+      "Totalschaden: Wiederbeschaffungswert minus Restwert minus SB. Abrechnung nach Kostenvoranschlag netto, nach konkreter Reparatur brutto.",
+      "Entwendung: Wird das Auto innerhalb eines Monats nach Schadenanzeige gefunden, muss der Kunde es zurücknehmen, wenn das zumutbar ist.",
+      "Alkohol ab 1,1 Promille: Vollkasko leistungsfrei. KH zahlt dem Opfer und nimmt beim Fahrer Regress, höchstens 5.000 €.",
+      "Ölverlust: KH zahlt die verunreinigte Fläche. Abschleppen und Mietwagen nur über den Schutzbrief (Mietwagen erst ab 50 km Entfernung vom Wohnort).",
+      "Mitversichert sind Fahrzeugteile wie Dachbox und Fahrradträger, nicht aber Surfbrett, Fahrräder oder Gepäck.",
+      "Geltungsbereich Europa. Außereuropäische Gebiete wie Marokko besonders vereinbaren und in der Internationalen Versicherungskarte vermerken.",
+      "Beitragserhöhung durch Typklassenänderung: außerordentliches Kündigungsrecht innerhalb 1 Monats ab Zugang. Zur Vertragserhaltung SB erhöhen oder einzelne Bausteine kündigen."
+    ]],
+    ["Reiseversicherungen",[
+      "Weltweit gültig, versichert ist eine Reise ab 1 Übernachtung. Jahresvertrag kostet 20 % Zuschlag.",
+      "Reiserücktritt erstattet Stornokosten, z. B. wenn die Unterkunft unbewohnbar wird oder ein Dienst (freiwilliges soziales Jahr) unverschiebbar früher beginnt.",
+      "Reisegepäck: versichert auch in Gewahrsam eines Beförderungsunternehmens, verspätetes Gepäck bis 10 % der VS. Nicht versichert: Bargeld, Fahrkarten, Fahrräder (dafür Hausrat mit Fahrradklausel), liegen gelassene Sachen.",
+      "Foto-Ausrüstung und Schmuck zusammen bis 50 % der VS, Geschenke bis 10 %, höchstens 400 €. Diebstahl immer der Polizei melden."
+    ]]
+  ],
+  keys:[["§ 1 PflVG","Versicherungspflicht"],["§ 5 PflVG","Kontrahierungszwang, Ablehnung in 2 Wochen"],["SF 0","85 % (Pkw)"],["SF 1","52 %"],["SF 10","45 %, Maximum Camping"],["1,1 ‰","VK leistungsfrei"],["5.000 €","Regress KH beim Fahrer"],["18 Mon.","Frist Wiederanmeldung"],["6 Mon.","Rückkauf des Schadens"],["+20 %","Reise-Jahresvertrag"],["19 %","VSt Kfz und Reise"]],
+  src:"IHK-Lösungen S24, S25, W25/26 · KBF 3 Mobilität (2026) · Einstieg GAP II"
+},
+freizeit:{
+  sections:[
+    ["Haftungsrecht (BGB)",[
+      "Verschuldenshaftung (§ 823 BGB): Der Geschädigte muss das Verschulden beweisen.",
+      "Vermutetes Verschulden: Nutztierhalter (§ 833 S. 2), Aufsichtspflichtige (§ 832), Haus- und Gebäudebesitzer, Bauherr. Der Schädiger muss seine Unschuld beweisen (Beweislastumkehr).",
+      "Gefährdungshaftung: Luxustier wie Hund oder Reitpferd (§ 833 S. 1), Öltank, Kfz-Halter (§ 7 StVG). Haftung auch ohne Verschulden, keine Entlastung.",
+      "Deliktfähigkeit (§ 828): unter 7 Jahren nicht deliktfähig. Unter 10 Jahren keine Haftung für Unfälle mit Kfz im Straßenverkehr. Bis 17 bedingt deliktfähig, Haftung bei Einsichtsfähigkeit.",
+      "Hat der Aufsichtspflichtige seine Pflicht nicht verletzt und ist das Kind nicht deliktfähig, haftet niemand. Die PHV wehrt dann die Ansprüche ab (passiver Rechtsschutz)."
+    ]],
+    ["Privathaftpflicht (PHV)",[
+      "Mitversichert: Ehe- und Lebenspartner, unverheiratete Kinder bis zum Ende der Erstausbildung, minderjährige Stiefkinder und pflegebedürftige Angehörige in häuslicher Gemeinschaft.",
+      "Nach der Erstausbildung braucht das Kind eine eigene PHV.",
+      "Vorübergehender Auslandsaufenthalt bis 2 Jahre mitversichert.",
+      "Eigenschäden sind nie versichert, auch nicht zwischen Personen desselben Vertrags.",
+      "Mitversichert z. B.: Inline-Skates, Skifahren, Krankenfahrstühle, Aufsitzmäher unter 20 km/h, legaler Schusswaffengebrauch, fremde Segelboote ohne Motor, Vermietung im selbst bewohnten Zweifamilienhaus.",
+      "Nicht mitversichert: eigene Motorboote, Pferde (eigene Tierhalter-Haftpflicht). Bauherren-Haftpflicht nötig, wenn die Bausumme über 200.000 € liegt.",
+      "Mietsachschäden an privat gemieteten Räumen sind gedeckt. Geliehene und gemietete Sachen mit 100 € SB.",
+      "Vorsorgeversicherung: neue Risiken sind beitragsfrei mitversichert. Anzeige innerhalb 1 Monats nach Aufforderung, sonst erlischt der Schutz rückwirkend."
+    ]],
+    ["Rechtsschutz",[
+      "Bausteine: Privat, Beruf, Verkehr, Wohnen. Im Beratungsgespräch immer alle anbieten.",
+      "Verkehrs-RS für Familien: alle Fahrzeuge der mitversicherten Personen pauschal, auch das Mofa des Kindes und das künftige Auto des studierenden Sohnes.",
+      "Falschparken ist ausgeschlossen. Geschwindigkeitsverstöße fallen unter Ordnungswidrigkeiten-RS.",
+      "Schadenersatz-RS hat keine Wartezeit. Mietwagen fallen unter RS im Vertrags- und Sachenrecht.",
+      "Europäisches Ausland: Strafkaution wird gestellt, VS bis 1 Mio. €, dazu der Korrespondenzanwalt am Wohnort.",
+      "Außerhalb des Geltungsbereichs (z. B. Südamerika): nur bei Reisen bis 12 Wochen und bis 100.000 €.",
+      "Beratungs-RS im Familien- und Erbrecht: Rechtsschutzfall ist das Ereignis, das die Rechtslage ändert (z. B. der Erbfall). Vorsorgliche Beratung ist nicht versichert.",
+      "Verwaltungs-RS: Streit um die Zulassung zum Studium ist ausgeschlossen.",
+      "Beitrag: Grundbeitrag minus 10 % Dauernachlass (3 Jahre) minus 5 % bei jährlicher Zahlung, plus 19 % VSt."
+    ]]
+  ],
+  keys:[["§ 823","Verschuldenshaftung"],["§ 832","Aufsichtspflicht"],["§ 833 S.1","Luxustier, Gefährdung"],["§ 833 S.2","Nutztier, vermutet"],["< 7 J.","nicht deliktfähig"],["< 10 J.","keine Haftung im Kfz-Verkehr"],["2 Jahre","Ausland PHV"],["100 €","SB Miet-/Leihsachen"],["200.000 €","Bausumme, sonst Bauherren-HV"],["12 Wochen","RS außerhalb Geltungsbereich"]],
+  src:"IHK-Lösungen S24–W25/26 · KBF 3 (RS-Fälle) · Einstieg GAP II"
+},
+wohnen:{
+  sections:[
+    ["Hausratversicherung",[
+      "Versicherte Gefahren: Feuer, Einbruchdiebstahl und Raub, Leitungswasser (bestimmungswidriger Austritt), Sturm und Hagel (vom Wetteramt bestätigt).",
+      "Hausrat wird zum Neuwert ersetzt, wenn die Reparatur unwirtschaftlich ist. Teppiche und Einrichtung zum Wiederbeschaffungswert.",
+      "Außenversicherung: bis 10 % der VS inklusive Vorsorge, höchstens 10.000 €. Ein Student ohne eigenen Hausstand ist darüber unabhängig von der Dauer versichert.",
+      "Entschädigungsgrenzen: Bargeld 1.500 €, Schmuck 20.000 €. Wertsachen insgesamt bis 20 % der VS inklusive Vorsorge.",
+      "Terrassenmöbel draußen sind keine versicherte Sache. Mit Klausel PK 7215 (Naturgefahren außerhalb von Gebäuden) doch, die direkt anschließende Terrasse ist dann Versicherungsort.",
+      "Gebäude- und Grundstücksbestandteile (Fensterscheibe, Zaun, Parkett) zahlt die Wohngebäudeversicherung, nicht die Hausrat.",
+      "Bei falsch angegebener Wohnfläche entfällt der Unterversicherungsverzicht."
+    ]],
+    ["Wohngebäudeversicherung",[
+      "Brand: Brandbegriff ist erfüllt, wenn das Feuer seinen bestimmungsgemäßen Herd verlassen hat. Schäden durch die Sprinkleranlage sind als Folgeschaden versichert. Grobe Fahrlässigkeit prüfen.",
+      "Überschwemmung ist eine Elementargefahr. Carport und Zaun über Klausel 7264, Aufräumen von Bäumen über Klausel 7363 bis 2.000 €. Bäume, die durch die Überschwemmung entwurzelt wurden, sind nicht versichert.",
+      "Abbruch- und Aufräumkosten bis 5 % der VS 1914 mal Anpassungsfaktor.",
+      "Mietausfall nur für Wohnräume. Notwendige Schadenminderung (z. B. Abdecken des Dachs) wird ersetzt.",
+      "Unterversicherung: Entschädigung = Schaden × VS ÷ Versicherungswert. Nicht angezeigte werterhöhende Maßnahmen führen dazu.",
+      "Selbstbeteiligung in den Aufgaben meist 500 €."
+    ]],
+    ["Glasversicherung",[
+      "Allgefahrenversicherung: leistet, wenn keine andere Versicherung leistet.",
+      "Ersetzt werden die Scheibe nach Rechnung sowie Aufräumkosten und Notverglasung. Aquarium mitversichert, Fische nicht."
+    ]],
+    ["Versicherungsteuer",[
+      "Hausrat 16,15 %, Glas 19 %, Wohngebäude mit Feuer 16,34 %, nur Feuer 13,20 %, ohne Feuer 19 %.",
+      "Haftpflicht, Rechtsschutz, Kfz, Reise und Unfall 19 %. Zinsmethode PROXIMUS 30/360."
+    ]]
+  ],
+  keys:[["10 %","Außenversicherung, max. 10.000 €"],["1.500 €","Bargeld"],["20.000 €","Schmuck"],["20 %","Wertsachen im Wertschutzschrank"],["PK 7215","Naturgefahren draußen"],["7264","Carport, Zaun"],["7363","Bäume bis 2.000 €"],["5 %","Aufräumkosten der VS 1914"],["16,15 %","VSt Hausrat"],["16,34 %","VSt Gebäude mit Feuer"]],
+  src:"IHK-Lösungen S24, W24/25, S25, W25/26"
+},
+gesund:{
+  sections:[
+    ["Versicherungspflicht und Wechsel",[
+      "JAEG 2026: 6.450 € im Monat bzw. 77.400 € im Jahr. Wer ein Jahr darüber liegt, kann in die PKV wechseln. BBG KV/PV 2026: 5.812,50 € im Monat.",
+      "Zum Jahresentgelt zählen 13. Gehalt, VWL, Dienstwagen und regelmäßige Pauschalen. Einmalzahlungen wie Jubiläumsprämie und Bonus zählen nicht.",
+      "Selbstständige werden versicherungsfrei. Austritt aus der GKV innerhalb von 2 Wochen nach Hinweis, sonst Kündigung zum Ende des übernächsten Monats mit PKV-Nachweis.",
+      "Wer über 55 ist und seit über 5 Jahren privat versichert, wird bei Arbeitslosigkeit nicht wieder versicherungspflichtig. Beitragssenkung über Tarifwechsel, KT prüfen.",
+      "Studium: Tochter wird GKV-pflichtig, Befreiung möglich und dann beihilfekonform in der PKV bleiben.",
+      "Beihilfe: Beamtin mit 2 Kindern 70 %, jedes Kind 80 %."
+    ]],
+    ["Neugeborene, Wartezeiten, Gesundheitsprüfung",[
+      "Neugeborene ohne Gesundheitsprüfung und Wartezeit, wenn ein Elternteil seit mindestens 3 Monaten versichert ist und das Kind innerhalb von 2 Monaten rückwirkend angemeldet wird. Schutz nicht höher als beim Elternteil.",
+      "Allgemeine Wartezeit entfällt bei Unfällen. Besondere Wartezeit von 8 Monaten (z. B. Zahnersatz) entfällt auch bei Unfällen nicht.",
+      "Keine Wartezeit bei Wechsel aus GKV oder anderer PKV (Anrechnung) und bei Beamten, deren Beihilfesatz sich ändert (§ 199 Abs. 2 VVG).",
+      "Gesundheitsprüfung immer bei Wechsel in einen besseren Tarif, bei zusätzlichen Einschlüssen und bei Wechsel von einer anderen Gesellschaft.",
+      "Versicherungsschutz beginnt erst, wenn technischer und formeller Beginn erreicht und Wartezeiten abgelaufen sind."
+    ]],
+    ["Leistungsfälle",[
+      "Geltungsbereich Krankheitskosten und KHT: Europa. Außereuropäisch: die ersten 2 Monate eines vorübergehenden Aufenthalts, länger nur, wenn die Rückreise die Gesundheit gefährden würde.",
+      "Krankentagegeld nur bei Arbeitsunfähigkeit in Deutschland. Ausnahme: Unfall im europäischen Ausland mit stationärer Behandlung im öffentlichen Krankenhaus.",
+      "Ausgeschlossene Ärzte: keine Leistung. Bei schwebenden Fällen erst 3 Monate nach der Benachrichtigung.",
+      "Prämienverzug: nach qualifizierter Mahnung 2 Wochen Zahlungsfrist, danach Leistungsfreiheit. Bei kündbaren Tarifen außerordentliches Kündigungsrecht.",
+      "Heilpraktiker erstattungsfähig. Der Versicherer darf auf die Kosten schulmedizinischer Behandlung kürzen.",
+      "Lasik erst 4 Jahre nach Tarifbeginn, 100 % bis 1.000 €. Danach 5 Jahre keine Sehhilfen.",
+      "Über dem 3,5-fachen GOÄ/GOZ-Satz braucht die Rechnung eine Begründung. Kosmetische Mehrkosten bei KFO werden nicht erstattet.",
+      "KHT bei PROXIMUS höchstens 55 € pro Tag."
+    ]],
+    ["Pflege",[
+      "Die Pflegepflichtversicherung leistet auch bei geistigen Einschränkungen, wenn sie voraussichtlich länger als 6 Monate bestehen und Medicproof einen Pflegegrad festgestellt hat.",
+      "Wohnumfeldverbesserung bis 4.000 € je Maßnahme. Entscheidung innerhalb von 3 Wochen nach Antrag.",
+      "Pflegehilfsmittel nach Hilfsmittelverzeichnis, vorrangig leihweise.",
+      "Pflege-Bahr (GEPV): 5 € staatliche Förderung im Monat, Wartezeit 5 Jahre. Ergänzend Tarif PET mit 3 Jahren Wartezeit.",
+      "Gesetzliche und private Pflegepflichtversicherung leisten gleich viel."
+    ]]
+  ],
+  keys:[["77.400 €","JAEG 2026 / Jahr"],["5.812,50 €","BBG KV / Monat"],["3 / 2 Mon.","Neugeborene: Vorversicherung / Anmeldung"],["8 Mon.","besondere Wartezeit"],["2 Mon.","außereuropäisches Ausland"],["2 Wochen","nach qualifizierter Mahnung"],["55 €","max. KHT PX"],["4.000 €","Wohnumfeld je Maßnahme"],["5 €","GEPV-Förderung"],["§ 204 VVG","Tarifwechsel"]],
+  src:"IHK-Lösungen S24–W25/26 · KBF 4 · RW-Skript 2026 · Einstieg GAP II"
+},
+vorsorge:{
+  sections:[
+    ["Drei-Schichten-Modell",[
+      "1. Schicht Basisversorgung: gesetzliche Rente, Rürup (Basisrente).",
+      "2. Schicht Zusatzversorgung: Riester, betriebliche Altersversorgung.",
+      "3. Schicht private Vorsorge: Kapital-LV (Tod und Erleben), Risiko-LV (Tod), private Rente (Erleben), sofort beginnend oder aufgeschoben."
+    ]],
+    ["Basisrente (Rürup)",[
+      "Beiträge bis zum Höchstbetrag als Vorsorgeaufwendungen absetzbar.",
+      "Nachgelagerte Besteuerung: die Rente wird später nach Kohorte versteuert.",
+      "Nicht vererbbar, nicht übertragbar, nicht beleihbar, nicht veräußerbar, nicht kapitalisierbar. Kündigung führt zur Beitragsfreistellung. Rente frühestens mit 62.",
+      "Tod vor Rentenbeginn: keine Leistung, es sei denn, eine Hinterbliebenenrente ist eingeschlossen."
+    ]],
+    ["Private Rente und Lebensversicherung",[
+      "Beiträge aus versteuertem Einkommen. Die Rente wird nur mit dem Ertragsanteil versteuert.",
+      "Rentengarantiezeit im Tarif S30: 10 Jahre. Tod vor Rentenbeginn: Beitragsrückgewähr.",
+      "Bei GKV-pflichtversicherten Hinterbliebenen fallen keine Kassenbeiträge auf die private Rente an.",
+      "Rente garantiert berechnen per Dreisatz: Rente laut Tarif × Jahresbeitrag ohne Stückkosten ÷ Tarifbeitrag.",
+      "Bewertungsreserven entstehen, wenn der Marktwert der Kapitalanlagen den Buchwert übersteigt. Sie werden jährlich, bei Vertragsende und bei Rentenbeginn ermittelt und sind nicht garantiert.",
+      "Fondsgebundene Versicherung im Todesfall: Anteile × Wert am 2. Börsentag nach Eingang der Todesfallmeldung.",
+      "Hybrid-Rentenversicherung mit Dread-Disease-Option: bei schwerer Krankheit Auszahlung des Deckungskapitals."
+    ]],
+    ["Bezugsrecht, Abtretung, Leistungsprüfung",[
+      "Bezugsrecht in Textform, wirksam ab Zugang beim Versicherer. Widerruflich: jederzeit änderbar. Unwiderruflich: nur mit Zustimmung des Bezugsberechtigten.",
+      "Abtretung an eine Bank: die Bank erhält die Restschuld, den Rest der Bezugsberechtigte. Die Unfalltod-Zusatzversicherung geht an den Bezugsberechtigten.",
+      "Selbsttötung in den ersten 3 Jahren: nur Rückkaufswert. Bei einer Erhöhung beginnt die Frist für den Erhöhungsbetrag neu. Ausnahme: krankhafte Störung der Geistestätigkeit. Die Unfalltod-Zusatzversicherung schließt Selbsttötung immer aus.",
+      "Überschussverwendung Beitragsverrechnung: im Todesfall keine zusätzliche Überschussbeteiligung.",
+      "Unterlagen: Sterbeurkunde, ärztlicher Bericht zur Todesursache, Versicherungsschein, bei Unfall der Polizeibericht, Kontoverbindung."
+    ]]
+  ],
+  keys:[["62","Mindestrentenalter Rürup"],["10 Jahre","Rentengarantiezeit S30"],["3 Jahre","Selbsttötungsfrist"],["2. Börsentag","nach Todesfallmeldung"],["Ertragsanteil","private Rente"],["nachgelagert","Rürup, Riester"]],
+  src:"IHK-Lösungen S24–W25/26 · KBF 6 · Einstieg GAP II"
+},
+finanz:{
+  sections:[
+    ["Rechtlicher Rahmen und Grundsätze",[
+      "Grundlagen: Wertpapierhandelsgesetz, Geldwäschegesetz, Finanzanlagenvermittlungsverordnung, Beraterhaftung, WpHG-Fragebogen.",
+      "Magisches Dreieck: Liquidität, Rentabilität, Sicherheit stehen im Zielkonflikt.",
+      "Geldmarkt: Anlage bis 1 Jahr (Giro, Tages- und Festgeld, Geldmarktfonds). Kapitalmarkt: länger (Renten- und Aktienmarkt)."
+    ]],
+    ["Fonds",[
+      "Kosten: Ausgabeaufschlag, Verwaltungsgebühren, Depotgebühren.",
+      "Ausschüttend zahlt Erträge aus, thesaurierend legt sie wieder an.",
+      "Cost-Average-Effekt: Ein fester Betrag in regelmäßigen Abständen führt zu einem günstigeren Durchschnittspreis als der Kauf einer festen Stückzahl.",
+      "Dachfonds investieren in Anteile anderer Fonds.",
+      "Anteilspreis = Fondsvermögen ÷ Anzahl Anteile. Ausgabepreis = Anteilspreis + Ausgabeaufschlag.",
+      "ESG: Environment, Social, Governance. Ethic Invest beachtet zusätzlich den UN Global Compact.",
+      "Risikoklassen SRRI von 1 (gering) bis 7 (hoch)."
+    ]],
+    ["PROXIMUS-Fonds",[
+      "Cash Invest: Geldmarktfonds, SRRI 1, kein Ausgabeaufschlag, 0,25 % laufende Kosten, thesaurierend, Benchmark EURIBOR.",
+      "Bond Invest: Rentenfonds mit Unternehmensanleihen in Euro, SRRI 3, mäßig schwankend.",
+      "Global Invest: weltweiter Aktienfonds (1/5 Deutschland, 2/5 Euro-Ausland, 2/5 Nicht-Euro), SRRI 6.",
+      "Real Invest: offener Immobilienfonds, Mindesthaltefrist 24 Monate, Rückgabefrist 12 Monate.",
+      "Euro Indexx 49 Invest: passiver ETF auf die 49 größten Unternehmen der Eurozone, kein Ausgabeaufschlag, 0,20 % Kosten."
+    ]],
+    ["Anleihen und Aktien",[
+      "Steigen die Marktzinsen, fallen die Kurse bestehender Anleihen, und umgekehrt. Der Effekt ist umso stärker, je länger die Restlaufzeit ist.",
+      "Wer bis zum Laufzeitende hält, hat keinen Kursverlust, da der Emittent an die Anleihebedingungen gebunden ist.",
+      "Bonität: AAA (z. B. Bundesanleihe) hat das geringste Ausfallrisiko.",
+      "Ursachen für Kursschwankungen: Konjunktur, Staatsdefizite, Wirtschaftskrisen, unternehmensspezifische Ereignisse.",
+      "Wert des Bezugsrechts = (alter Kurs − Emissionskurs) ÷ (Bezugsverhältnis + 1)."
+    ]]
+  ],
+  keys:[["SRRI 1","Cash Invest"],["SRRI 3","Bond Invest"],["SRRI 6","Global Invest"],["24 / 12 Mon.","Real Invest Halte- / Rückgabefrist"],["≤ 1 Jahr","Geldmarkt"]],
+  src:"IHK-Lösungen S24, W24/25, S25, W25/26 · Übersicht der Proximus Fonds · Einstieg GAP II"
+},
+einkommen:{
+  sections:[
+    ["Private Unfallversicherung (PUV)",[
+      "Leistet ab 1 % Invalidität, rund um die Uhr und weltweit. PUV-Leistungen werden nicht mit der gesetzlichen Unfallversicherung verrechnet.",
+      "Gesetzliche UV: ab 20 % MdE, nur Arbeitsunfall, Wegeunfall, Berufskrankheit.",
+      "Gliedertaxe aus den Aufgaben: ganzes Bein 70 %, ein Auge 50 %. Teilverlust anteilig, z. B. 40 % Beeinträchtigung des Beins = 28 %.",
+      "Progression U 350: bis 25 % einfach, 26 bis 50 % dreifach, ab 51 % fünffach. U 500: bis 25 % einfach, ab 26 % fünffach (Beispiele bis 50 %).",
+      "Mitwirkung von Krankheiten ab 25 % kürzt alle Leistungen entsprechend.",
+      "Todesfallleistung, wenn die Person innerhalb eines Jahres an den Unfallfolgen stirbt.",
+      "Soforthilfe in % der VS, z. B. Schlüsselbein 20 %, Wirbelsäule 50 %, Oberschenkelhals 75 %, Schädelhirntrauma 2. Grades 20 %, Kiefer/Jochbein 30 %. Insgesamt höchstens 100 %.",
+      "Kinder unter 14: Rooming-in in Höhe des KHT, Neubemessung bis 5 Jahre (PX, Stand 2026). Neugeborene 6 Monate beitragsfrei, plus 6 Monate bei Anzeige.",
+      "Kosmetische OP bis zur vereinbarten Summe, Such-, Bergungs- und Rettungskosten bis 25.000 € beitragsfrei.",
+      "Mit 67 Wechsel in Tarif 50: Invalidität ohne Progression, Krankentagegeld entfällt, KHT auf 25 € gekürzt. Kündigungsrecht 1 Monat nach Zugang.",
+      "Steuer: einmalige Leistungen steuerfrei, Unfallrente mit Ertragsanteil."
+    ]],
+    ["Berufsunfähigkeit (BU)",[
+      "BU liegt vor, wenn der zuletzt ausgeübte Beruf voraussichtlich mindestens 6 Monate zu mindestens 50 % nicht ausgeübt werden kann.",
+      "Anspruch auf Rente und Beitragsbefreiung mit Ablauf des Monats, in dem die BU eingetreten ist.",
+      "Meldung später als 3 Monate: Anspruch erst ab Beginn des Monats der Mitteilung.",
+      "Tarif S 35: 43 % Bonusrente auf die garantierte Rente, Anfangshilfe von 3 garantierten Monatsrenten.",
+      "Unterlagen: Geburtsurkunde, Ursache der BU, Liste aller Behandler und Arbeitgeber, ärztliche Berichte, Berufsbeschreibung, Einkommensnachweis.",
+      "BU-Rente der 3. Schicht wird mit dem Ertragsanteil versteuert."
+    ]],
+    ["Erwerbsminderungsrente (gesetzlich)",[
+      "Maßstab ist jede Tätigkeit am allgemeinen Arbeitsmarkt, nicht der Beruf.",
+      "Voll erwerbsgemindert unter 3 Stunden täglich, teilweise 3 bis unter 6 Stunden.",
+      "Voraussetzung: 5 Jahre Wartezeit und 36 Pflichtbeitragsmonate in den letzten 5 Jahren."
+    ]],
+    ["Risiko-LV im Todesfall",[
+      "Unterlagen anfordern, Bezugsrecht prüfen (z. B. Tochter statt Ehemann), Abtretung an die Bank beachten.",
+      "Versicherungssumme plus Unfalltod-Zusatzversicherung. Mit dem Tod endet der Vertrag."
+    ]]
+  ],
+  keys:[["1 %","PUV ab Invalidität"],["20 %","gesetzliche UV ab MdE"],["70 %","Bein (Gliedertaxe)"],["50 %","Auge"],["25 %","Mitwirkung kürzt"],["1 Jahr","Tod nach Unfall"],["25.000 €","Bergungskosten"],["50 %","BU-Grad"],["3 Mon.","BU-Meldefrist"],["43 %","Bonusrente S 35"],["3 h / 6 h","EMR voll / teilweise"]],
+  src:"KBF 6 Lösung (2026) · IHK-Lösungen S24–W25/26 · Lernzusammenfassung PUV & BU"
+},
+rw:{
+  sections:[
+    ["Buchführung der Agentur",[
+      "Aktivtausch (z. B. Barkauf eines Autos), Passivtausch (Umschuldung), Aktiv-Passiv-Mehrung (Darlehen aufs Konto), Aktiv-Passiv-Minderung (Tilgung per Bank).",
+      "Bestandskonten schließen über die Bilanz ab, Erfolgskonten über die GuV, Privat und GuV über das Eigenkapital.",
+      "Entschädigung und Regulierungsaufwand schließen über „Forderungen gegen Direktion“ ab. Für den Generalagenten sind sie kein Aufwand.",
+      "Zentrales Direktinkasso: Provisionsgutschrift = Provisionsertrag und Forderung gegen Direktion. Die Überweisung ist ein Aktivtausch. Provision an Untervermittler = Provisionsaufwand und Verbindlichkeit.",
+      "Kassendifferenz: Ist mehr in der Kasse als gebucht, Kassendifferenz-Ertrag. Fehlt Geld, Kassendifferenz-Aufwand.",
+      "Gehaltsvorschuss oder Darlehen an Mitarbeiter: Forderung gegen AN, Aktivtausch, kein Aufwand.",
+      "Hypothekenzinsen und Grundsteuer gehören in den Haus- und Grundstücksaufwand, nicht in den Zinsaufwand."
+    ]],
+    ["Anlagen, Abgrenzung, Rückstellungen",[
+      "Bis 250 € netto: sofort Aufwand. GWG bis 800 €: 100 % Abschreibung am 31.12. (Alternative 1). Sammelposten 250 bis 1.000 €: 5 Jahre je 20 % (Alternative 2). Darüber linear und monatsgenau. Computer dürfen sofort voll abgeschrieben werden.",
+      "Verkauf von Anlagevermögen: Restbuchwert ermitteln. Darunter verkauft = außerordentlicher Aufwand, darüber = außerordentlicher Ertrag.",
+      "ARA: Aufwand im alten Jahr bezahlt, gehört ins neue. PRA: Ertrag im alten Jahr erhalten. Sonstige Verbindlichkeit / Forderung: Aufwand / Ertrag des alten Jahres erst im neuen bezahlt.",
+      "Rückstellung: Aufwand geschätzt im alten Jahr. Zahlung gleich hoch: nur Auflösung (Aktiv-Passiv-Minderung). Zahlung niedriger: außerordentlicher Ertrag. Höher: außerordentlicher Aufwand."
+    ]],
+    ["Kosten- und Leistungsrechnung",[
+      "Aufwand ist der gesamte Werteverzehr, Kosten der betriebsbedingte.",
+      "Neutraler Aufwand gehört nicht in die KLR: betriebsfremd (Spenden, Einkommensteuer), außerordentlich (Schäden, Verkauf unter Buchwert), periodenfremd (Nachzahlungen).",
+      "Gesamtkosten = Grundkosten + kalkulatorische Kosten. Anderskosten: kalkulatorische Abschreibung. Zusatzkosten: kalkulatorischer Unternehmerlohn, Zinsen, Miete.",
+      "Der kalkulatorische Unternehmerlohn mindert das Betriebsergebnis, aber nicht den steuerlichen Gewinn.",
+      "Leistungen = Provisionserträge. Betriebsergebnis = Leistungen − Gesamtkosten. Unternehmensergebnis = alle Erträge − alle Aufwendungen.",
+      "Kostenarten (welche?), Kostenstellen (wo?), Kostenträger (wofür?). Variable vs. fixe Kosten, Einzel- vs. Gemeinkosten."
+    ]],
+    ["Kennzahlen",[
+      "Schadenquote = Schadenaufwand × 100 ÷ Beiträge. Verwaltungskostenquote = Verwaltungskosten × 100 ÷ Beiträge. Combined Ratio = (Schaden + Kosten) × 100 ÷ Beiträge.",
+      "Stornoquote, Zuwachsrate = Zuwachs × 100 ÷ Anfangsbestand, Schadenhäufigkeit = Schäden × 100 ÷ Verträge, Schadendurchschnitt = Aufwand ÷ Anzahl Schäden.",
+      "Liquidität 1. Grades = flüssige Mittel × 100 ÷ kurzfristiges FK. 2. Grades zusätzlich kurzfristige Forderungen.",
+      "Anlagendeckung 1 = EK × 100 ÷ AV. Anlagendeckung 2 = (EK + langfristiges FK) × 100 ÷ AV, 100 % ist die goldene Bilanzregel.",
+      "EK-Rentabilität = (Gewinn − Unternehmerlohn − EK-Verzinsung) × 100 ÷ EK."
+    ]],
+    ["Gehaltsabrechnung 2026",[
+      "KV: (14,6 % + Zusatzbeitrag) ÷ 2, z. B. 8,55 % bei 2,5 % Zusatzbeitrag. RV 9,3 %, AV 1,3 %.",
+      "PV: Hälfte von 3,6 %. Kinderlose ab 23 zahlen 0,6 Punkte mehr, ab dem 2. Kind 0,25 Punkte weniger je Kind.",
+      "BBG RV/AV 8.450 € im Monat, KV/PV 5.812,50 €. Kirchensteuer in Bayern 8 % der Lohnsteuer.",
+      "VWL bis 40 € und nicht steuerfreie Zuschüsse erhöhen das steuer- und SV-pflichtige Einkommen."
+    ]]
+  ],
+  keys:[["20 Pkt.","RW in der GAP II"],["250 €","Sofortaufwand netto"],["800 €","GWG Alt. 1"],["1.000 €","Sammelposten Alt. 2"],["100 %","goldene Bilanzregel"],["8,55 %","KV-Anteil AN bei 2,5 %"],["9,3 %","RV-Anteil"],["+0,6","PV kinderlos ab 23"]],
+  src:"RW-Skript 2026 · Lernzusammenfassung KLR · IHK-Lösungen S24–W25/26"
+},
+wiso:{
+  sections:[
+    ["Recht und Unternehmen",[
+      "Die AG ist eine juristische Person des privaten Rechts und damit rechtsfähig.",
+      "Ein Schreibfehler (Erklärungsirrtum) macht den Vertrag nicht nichtig. Er ist wirksam, aber anfechtbar.",
+      "Mieter ist Besitzer (tatsächliche Gewalt), Vermieter bleibt Eigentümer (rechtliche Gewalt).",
+      "AGB sind vorformulierte Bedingungen. Sie werden Vertragsbestandteil, soweit keine Rechtsvorschriften wie das BGB entgegenstehen.",
+      "Bei einem Mangel hat der Käufer vorrangig das Recht auf Nacherfüllung.",
+      "Prokura darf z. B. Grundstücke erwerben, aber nicht die Bilanz unterschreiben oder das Geschäft aufgeben. Gesamtprokura heißt: nur gemeinsam.",
+      "Kündigung ist ein einseitiges, empfangsbedürftiges Rechtsgeschäft. Eine Bestellung auf eine Werbeanzeige braucht noch eine Auftragsbestätigung.",
+      "GmbH-Gewinn ohne Regelung nach Geschäftsanteilen. In der OHG haftet jeder Gesellschafter unmittelbar und unbeschränkt, Beschränkungen im Innenverhältnis gelten nach außen nicht."
+    ]],
+    ["Markt und Wirtschaftspolitik",[
+      "Gleichgewichtspreis: Angebot = Nachfrage, dort ist die abgesetzte Menge am höchsten. Unter dem Gleichgewicht herrscht Nachfrageüberhang (Verkäufermarkt).",
+      "Lohnquote = Anteil der Arbeitnehmerentgelte am Volkseinkommen. Sparquote = Sparen der privaten Haushalte am verfügbaren Einkommen.",
+      "Aufschwung: steigende Kapazitätsauslastung, sinkende Arbeitslosigkeit. Überhitzung gefährdet die Preisniveaustabilität.",
+      "EZB erhöht die Geldmenge durch Leitzinssenkung oder Kauf von Wertpapieren. Höhere Mindestreserve senkt sie.",
+      "Der Staat steuert über Einnahmen- und Ausgabenpolitik, z. B. Investitionen in Infrastruktur."
+    ]],
+    ["Arbeitsrecht und Ausbildung",[
+      "Betriebsrat: wahlberechtigt ab 16 Jahren (ohne leitende Angestellte), wählbar ab 18 mit 6 Monaten Betriebszugehörigkeit. 201 bis 400 Wahlberechtigte = 9 Mitglieder.",
+      "Mindesturlaub 24 Werktage. Wesentliche Vertragsbedingungen schriftlich nach Nachweisgesetz.",
+      "Probezeit in der Ausbildung ist Pflicht (1 bis 4 Monate). Im Arbeitsverhältnis optional, höchstens 6 Monate mit 2 Wochen Kündigungsfrist.",
+      "Kündigungsfrist ohne Probezeit: 4 Wochen zum 15. oder Monatsende, ab 2 Jahren Betriebszugehörigkeit länger.",
+      "Azubi darf nach der Probezeit nur aus wichtigem Grund oder bei Berufsaufgabe kündigen, nicht wegen mehr Geld beim Konkurrenten.",
+      "Jugendarbeitsschutz: 12 Stunden Ruhezeit, keine Akkordarbeit. Ohne Nachuntersuchung spätestens 14 Monate nach Beginn darf der Jugendliche nicht weiterbeschäftigt werden.",
+      "Entgeltfortzahlung bis 6 Wochen. Kündigungsschutzklage vor dem Arbeitsgericht.",
+      "Streik erst nach Ablauf des Tarifvertrags (Friedenspflicht). Abweichung vom Tarifvertrag nur zugunsten der Arbeitnehmer.",
+      "Beiträge zur Berufsgenossenschaft zahlt der Arbeitgeber allein. Die BG kontrolliert die Unfallverhütungsvorschriften."
+    ]],
+    ["Organisation, Sicherheit, Nachhaltigkeit",[
+      "Stabsstelle: Leitungshilfsstelle ohne Weisungsbefugnis. Management by Objectives: Führung durch Zielvereinbarung.",
+      "Bei Räumung keine Aufzüge benutzen. Sanitätsräume dienen nicht dem Brandschutz.",
+      "Unmittelbarer Umweltschutz: Intranet statt Papier, effizientere Geräte. Ökostrom senkt nicht den Verbrauch.",
+      "Digitalisierung: optimierte Abläufe, weniger Zeitaufwand, nahezu unbegrenzter Informationszugang für Kunden."
+    ]]
+  ],
+  keys:[["16 J.","wahlberechtigt BR"],["18 J. + 6 Mon.","wählbar BR"],["24 Werktage","Mindesturlaub"],["6 Wochen","Entgeltfortzahlung"],["12 h","Ruhezeit Jugendliche"],["14 Mon.","Nachuntersuchung spätestens"],["30 Aufgaben","60 Minuten"]],
+  src:"WiSo-Lösungen W24/25 und W25/26 · Einstieg GAP II"
+}
+};
+
+/* ---------- Karteikarten ---------- */
+const CARDS = [
+ // Mobilität
+ ["mobil","Was regelt § 5 PflVG?","Kontrahierungszwang in der Kfz-Haftpflicht. Der Versicherer muss annehmen (mindestens zu den Mindestsummen). Ablehnung nur schriftlich innerhalb von 2 Wochen, sonst gilt der Antrag als angenommen."],
+ ["mobil","Wann darf der Versicherer einen KH-Antrag ablehnen?","Wenn er selbst einen Vorvertrag des Kunden nach einem Schadenfall gekündigt hat (§ 5 Abs. 4 PflVG). Ablehnung schriftlich innerhalb von 2 Wochen nach Eingang."],
+ ["mobil","Wie endet die vorläufige Deckung?","Hauptvertrag kommt zustande (Erstbeitrag gezahlt) · Erstbeitrag wird nicht gezahlt · Kündigung mit 2 Wochen Frist · Widerruf des Kunden."],
+ ["mobil","SFR nach einer Unterbrechung von 6 bis 12 Monaten?","Einstufung wie vor der Unterbrechung, keine Besserstufung."],
+ ["mobil","SFR nach einer Unterbrechung von mehr als 12 Monaten?","Für jedes weitere angefangene Kalenderjahr seit der Unterbrechung wird ein schadenfreies Jahr abgezogen. Nach über 7 Jahren verfällt der SFR."],
+ ["mobil","Voraussetzungen für die Übernahme des SFR von den Eltern?","Elternteil · Fahrzeug überwiegend vom Kind gefahren · gleiche Fahrzeuggruppe · schriftliche Erklärung beider mit vollständiger Abtretung · Führerscheinkopie. Übernommen wird höchstens so viel, wie das Kind seit Führerscheinerwerb erfahren konnte."],
+ ["mobil","Sondereinstufung SF 1 über die Eltern: Bedingungen?","Ein Elternteil hat einen Pkw beim selben Versicherer in mindestens SF 1 und besitzt seit mindestens 1 Jahr den Führerschein. Beitragssatz 52 %."],
+ ["mobil","Was gilt für Campingfahrzeuge beim SFR?","Keine Sondereinstufung (SF 0 = 100 %), höchstens SF 10 (45 %), keine Typ- und Regionalklassen."],
+ ["mobil","Was umfasst die Ruheversicherung?","Kfz-Haftpflicht und Teilkasko, beitragsfrei, ab 2 Wochen Stilllegung. Wiederanmeldung innerhalb von 18 Monaten, sonst endet der Vertrag."],
+ ["mobil","Rückkauf eines Kfz-Schadens: Frist?","Innerhalb von 6 Monaten nach Regulierung. Bis 500 € Schaden muss der Versicherer den Kunden darauf hinweisen."],
+ ["mobil","Teilkasko oder Vollkasko: Kratzer durch Unbekannte?","Vollkasko (mut- oder böswillige Handlung Dritter). Mit SB und Rückstufung in der VK."],
+ ["mobil","Vollkasko bei Alkohol?","Ab 1,1 Promille leistungsfrei. KH zahlt dem Geschädigten und nimmt beim Fahrer Regress bis 5.000 €. Der KH-SFR wird belastet."],
+ ["mobil","Ölverlust auf dem Parkplatz: wer zahlt was?","KH zahlt die Reinigung der verunreinigten Fläche. Abschleppen nur mit Schutzbrief."],
+ ["mobil","Was ist bei der Reiserücktrittsversicherung versichert?","Stornokosten, z. B. wenn die Unterkunft unbewohnbar wird oder ein unverschiebbarer Termin (soziales Jahr) früher beginnt und niemand sonst die Kosten trägt."],
+ ["mobil","Was ist im Reisegepäck nicht versichert?","Bargeld, Fahrkarten, Fahrräder (dafür Hausrat mit Fahrradklausel), Sehhilfen und liegen gelassene Sachen."],
+ // Freizeit
+ ["freizeit","Verschuldenshaftung, vermutetes Verschulden, Gefährdungshaftung: wer beweist was?","§ 823: Geschädigter beweist Verschulden.\nVermutet (Nutztier § 833 S. 2, Aufsicht § 832): Schädiger muss Unschuld beweisen.\nGefährdung (Luxustier § 833 S. 1, Kfz, Öltank): Haftung ohne Verschulden, keine Entlastung."],
+ ["freizeit","Deliktfähigkeit nach § 828 BGB?","Unter 7: nicht deliktfähig. Unter 10: keine Haftung für Unfälle mit Kfz im Straßenverkehr. 7 bis 17: bedingt deliktfähig, haftet bei Einsichtsfähigkeit."],
+ ["freizeit","Bis wann sind Kinder in der PHV der Eltern mitversichert?","Unverheiratet und bis zum Ende der Erstausbildung. Danach eigene PHV."],
+ ["freizeit","Ist ein Reitpferd in der PHV versichert?","Nein. Pferde brauchen eine eigene Tierhalter-Haftpflicht. Eigenschäden am Pferd sind nie gedeckt."],
+ ["freizeit","Wann brauchen Bauherren eine eigene Bauherren-Haftpflicht?","Wenn die Bausumme über 200.000 € liegt (PX)."],
+ ["freizeit","Wie lange gilt die PHV im Ausland?","Bei vorübergehendem Auslandsaufenthalt bis zu 2 Jahre, weltweit."],
+ ["freizeit","Rechtsschutz: Falschparken und Blitzer?","Falschparken ist ausgeschlossen. Geschwindigkeitsverstöße fallen unter den Ordnungswidrigkeiten-RS."],
+ ["freizeit","Wann ist der Rechtsschutzfall im Beratungs-RS Erbrecht?","Mit dem Ereignis, das die Rechtslage ändert, also dem Erbfall. Vorsorgliche Beratung ist nicht versichert."],
+ ["freizeit","Rechtsschutz bei einer Reise nach Südamerika?","Außerhalb des Geltungsbereichs nur bei Reisen bis 12 Wochen und bis 100.000 €. Schadenersatz-RS ohne Wartezeit, Mietwagen über Vertrags- und Sachenrecht."],
+ // Wohnen
+ ["wohnen","Grenze der Außenversicherung in der Hausrat?","10 % der VS inklusive Vorsorge, höchstens 10.000 €."],
+ ["wohnen","Entschädigungsgrenzen Bargeld und Schmuck?","Bargeld 1.500 €, Schmuck 20.000 €. Im Wertschutzschrank Wertsachen bis 20 % der VS inklusive Vorsorge."],
+ ["wohnen","Wann ist der Brandbegriff erfüllt?","Wenn das Feuer seinen bestimmungsgemäßen Herd verlassen hat. Löschwasser- und Sprinklerschäden sind Folgeschäden und mitversichert."],
+ ["wohnen","Formel Unterversicherung?","Entschädigung = Schaden × Versicherungssumme ÷ Versicherungswert."],
+ ["wohnen","Klauseln 7264 und 7363 in der Wohngebäude?","7264: Grundstücksbestandteile wie Carport und Zaun. 7363: Aufräumen umgestürzter Bäume bis 2.000 €."],
+ ["wohnen","Wer zahlt Parkett, Fensterscheibe, Zaun?","Die Wohngebäudeversicherung, weil es Gebäude- bzw. Grundstücksbestandteile sind."],
+ ["wohnen","Versicherungsteuer Hausrat und Wohngebäude mit Feuer?","Hausrat 16,15 %, Wohngebäude mit Feuer 16,34 %. Glas und Gebäude ohne Feuer 19 %, nur Feuer 13,20 %."],
+ // Gesundheit
+ ["gesund","JAEG 2026?","6.450 € im Monat, 77.400 € im Jahr."],
+ ["gesund","Neugeborene in der PKV: Bedingungen?","Ein Elternteil seit mindestens 3 Monaten versichert, Anmeldung innerhalb von 2 Monaten rückwirkend. Dann ohne Gesundheitsprüfung, Risikozuschläge und Wartezeit, höchstens wie der Elternteil."],
+ ["gesund","Entfällt die Wartezeit bei einem Unfall?","Die allgemeine ja. Die besondere Wartezeit von 8 Monaten (z. B. Zahnersatz) nein."],
+ ["gesund","Krankheitskosten im außereuropäischen Ausland?","Versichert in den ersten 2 Monaten eines vorübergehenden Aufenthalts. Länger nur, wenn die Rückreise die Gesundheit gefährden würde."],
+ ["gesund","Prämienverzug in der PKV: Ablauf?","Qualifizierte Mahnung mit 2 Wochen Frist. Danach Leistungsfreiheit, bei kündbaren Tarifen außerordentliche Kündigung möglich."],
+ ["gesund","Pflegegeld bei vorübergehender Hilfsbedürftigkeit von 3 Monaten?","Nein. Die Einschränkung muss voraussichtlich länger als 6 Monate dauern und Medicproof muss einen Pflegegrad feststellen."],
+ ["gesund","Pflege-Bahr (GEPV)?","Staatliche Förderung 5 € im Monat, Wartezeit 5 Jahre. Ergänzend PET mit 3 Jahren Wartezeit."],
+ ["gesund","Arbeitslos mit 57, seit 10 Jahren PKV: zurück in die GKV?","Nein. Über 55 und länger als 5 Jahre privat versichert: keine Versicherungspflicht, kein Wechsel. Auch nicht in die soziale Pflegeversicherung."],
+ // Vorsorge
+ ["vorsorge","Die 3 Schichten der Altersvorsorge?","1. Basis: GRV, Rürup. 2. Zusatz: Riester, bAV. 3. Privat: Kapital-LV, Risiko-LV, private Rente."],
+ ["vorsorge","Besteuerung Rürup vs. private Rente?","Rürup: Beiträge absetzbar, Rente nachgelagert voll steuerpflichtig (Kohorte). Private Rente: Beiträge aus versteuertem Geld, nur Ertragsanteil steuerpflichtig."],
+ ["vorsorge","Was darf man mit einer Basisrente nicht?","Vererben, übertragen, beleihen, veräußern, kapitalisieren. Kündigung führt nur zur Beitragsfreistellung. Rente ab 62."],
+ ["vorsorge","Widerrufliches vs. unwiderrufliches Bezugsrecht?","Widerruflich: jederzeit änderbar. Unwiderruflich: nur mit Zustimmung des Bezugsberechtigten. Beides in Textform, wirksam ab Zugang."],
+ ["vorsorge","Selbsttötung in der Lebensversicherung?","In den ersten 3 Jahren nur Rückkaufswert. Bei Erhöhung neue Frist für den Erhöhungsbetrag. Unfalltod-Zusatz zahlt nie."],
+ ["vorsorge","Wann entstehen Bewertungsreserven?","Wenn der Marktwert der Kapitalanlagen den Buchwert übersteigt. Sie werden verursachungsorientiert zugeordnet und sind nicht garantiert."],
+ // Finanz
+ ["finanz","Cost-Average-Effekt?","Regelmäßig ein fester Betrag statt einer festen Stückzahl: man kauft bei niedrigen Kursen mehr Anteile und erreicht einen günstigeren Durchschnittspreis."],
+ ["finanz","Was ist ein Dachfonds?","Ein Fonds, der in Anteile anderer Investmentfonds investiert."],
+ ["finanz","Zinsen steigen: was passiert mit Anleihekursen?","Sie fallen, umso stärker, je länger die Restlaufzeit. Wer bis zum Ende hält, hat keinen Kursverlust."],
+ ["finanz","Wofür steht ESG?","Environment (Umwelt), Social (Soziales), Governance (Unternehmensführung)."],
+ ["finanz","Magisches Dreieck der Geldanlage?","Liquidität, Rentabilität, Sicherheit, die im Zielkonflikt stehen."],
+ ["finanz","Risikoklassen der PROXIMUS-Fonds?","Cash Invest 1 · Bond Invest 3 · Global Invest 6 · Euro Indexx 49 Invest 6. Skala SRRI 1 bis 7."],
+ ["finanz","Formel Wert des Bezugsrechts?","(alter Kurs − Emissionskurs) ÷ (Bezugsverhältnis + 1)."],
+ // Einkommen
+ ["einkommen","Progression U 350?","Bis 25 % einfach, 26 bis 50 % dreifach, ab 51 % fünffach. Beispiel 70 %: 25 + 75 + 100 = 200 %."],
+ ["einkommen","Gliedertaxe Bein und Auge (aus den Aufgaben)?","Ganzes Bein 70 %, ein Auge 50 %. Teilbeeinträchtigung anteilig, z. B. 30 % des Beins = 21 %."],
+ ["einkommen","PUV vs. gesetzliche UV?","PUV ab 1 % Invalidität, 24 h weltweit, keine Verrechnung. GUV ab 20 % MdE, nur Arbeits- und Wegeunfall und Berufskrankheit."],
+ ["einkommen","Wann wird die Todesfallleistung der PUV fällig?","Wenn die Person innerhalb eines Jahres nach dem Unfall an dessen Folgen stirbt."],
+ ["einkommen","Was bekommt eine Mutter, die ihr 12-jähriges Kind im Krankenhaus begleitet?","Rooming-in in Höhe des KHT des Kindes, weil es unter 14 ist."],
+ ["einkommen","Ab wann zahlt die BU?","Mit Ablauf des Monats, in dem die BU eingetreten ist. Bei Meldung nach über 3 Monaten erst ab Beginn des Monats der Mitteilung."],
+ ["einkommen","Leistungen Tarif S 35 bei BU?","Garantierte Rente plus 43 % Bonusrente, Beitragsbefreiung und Anfangshilfe von 3 garantierten Monatsrenten."],
+ ["einkommen","Erwerbsminderungsrente: voll vs. teilweise?","Voll: unter 3 Stunden täglich arbeitsfähig. Teilweise: 3 bis unter 6 Stunden. Voraussetzung 5 Jahre Wartezeit und 36 Pflichtbeiträge in den letzten 5 Jahren."],
+ // RW
+ ["rw","Vier Arten der Bilanzveränderung?","Aktivtausch · Passivtausch · Aktiv-Passiv-Mehrung (Bilanzverlängerung) · Aktiv-Passiv-Minderung (Bilanzverkürzung)."],
+ ["rw","Grundkosten, Anderskosten, Zusatzkosten?","Grundkosten = Aufwand in gleicher Höhe. Anderskosten = anderer Wert als in der Fibu (kalk. AfA). Zusatzkosten = kein Aufwand in der Fibu (kalk. Unternehmerlohn, Zinsen, Miete)."],
+ ["rw","Betriebsergebnis vs. Unternehmensergebnis?","Betriebsergebnis = Leistungen (Provisionserträge) − Gesamtkosten. Unternehmensergebnis = alle Erträge − alle Aufwendungen laut GuV."],
+ ["rw","Abschreibungsregeln für Anschaffungen?","Bis 250 € netto Sofortaufwand. GWG bis 800 € (100 % am 31.12.) oder Sammelposten 250–1.000 € (5 Jahre à 20 %). Darüber linear und monatsgenau."],
+ ["rw","Combined Ratio?","(Schadenaufwand + Kosten) × 100 ÷ Beiträge."],
+ ["rw","Wohin gehören Entschädigung und Regulierungsaufwand beim GA?","Auf Forderungen gegen Direktion. Für den GA sind sie kein Aufwand."],
+ ["rw","ARA, PRA, sonstige Forderung, sonstige Verbindlichkeit?","ARA: Aufwand vorausbezahlt. PRA: Ertrag vorab erhalten. Sonst. Verb.: Aufwand des alten Jahres noch nicht bezahlt. Sonst. Ford.: Ertrag des alten Jahres noch nicht erhalten."],
+ ["rw","Goldene Bilanzregel?","Anlagendeckung 2 = (EK + langfristiges FK) × 100 ÷ AV mindestens 100 %."],
+ // WiSo
+ ["wiso","Wer ist bei der Betriebsratswahl wahlberechtigt und wählbar?","Wahlberechtigt: Arbeitnehmer ab 16 (ohne leitende Angestellte). Wählbar: ab 18 und 6 Monate im Betrieb."],
+ ["wiso","Rangfolge der Mängelrechte?","Zuerst Nacherfüllung. Erst danach Rücktritt, Minderung oder Schadenersatz."],
+ ["wiso","Was darf ein Prokurist nicht?","Bilanz und Steuererklärungen unterschreiben, Geschäft aufgeben, Grundstücke verkaufen oder belasten (ohne besondere Befugnis), Prokura erteilen."],
+ ["wiso","Wie kündigt die EZB eine Geldmengenerhöhung an?","Leitzins senken oder Wertpapiere von Banken kaufen. Mindestreserve erhöhen oder Wertpapiere verkaufen senkt die Geldmenge."],
+ ["wiso","Kündigungsfrist eines Arbeitnehmers mit 18 Monaten Betriebszugehörigkeit?","4 Wochen zum 15. oder zum Monatsende (§ 622 Abs. 1 BGB)."],
+ ["wiso","Wichtigste Jugendarbeitsschutz-Regeln?","12 Stunden Ruhezeit, keine Akkordarbeit, Nachuntersuchung im ersten Jahr (ohne Bescheinigung nach 14 Monaten Beschäftigungsverbot)."]
+];
+
+/* ---------- Quiz ---------- */
+const QUIZ = [
+ // Mobilität
+ {t:"mobil",q:"Ein Kfz-Haftpflichtantrag geht am 14.03. ein. Der Versicherer meldet sich nicht. Was gilt am 29.03.?",o:["Der Antrag ist noch offen, bis die Police kommt","Der Antrag gilt als angenommen","Der Antrag gilt als abgelehnt","Der Kunde muss den Antrag erneut stellen"],c:1,e:"Ablehnung nur schriftlich innerhalb von 2 Wochen (§ 5 Abs. 3 PflVG). Danach greift die Annahmefiktion.",s:"KBF 3, Aufgabe 1"},
+ {t:"mobil",q:"Wann darf die PROXIMUS einen Kfz-Haftpflichtantrag ablehnen?",o:["Wenn ein anderer Versicherer vom Vorvertrag zurückgetreten ist","Wenn der Kunde jünger als 23 ist","Wenn die PROXIMUS selbst einen Vorvertrag nach einem Schadenfall gekündigt hat","Nie, es gilt immer Kontrahierungszwang"],c:2,e:"Ausnahme vom Kontrahierungszwang nach § 5 Abs. 4 PflVG. Der Rücktritt eines anderen Versicherers zählt nicht, dann muss mit Mindestsummen angenommen werden.",s:"KBF 3, Aufgaben 11 und 13"},
+ {t:"mobil",q:"Ein Vertrag war vom 01.06.2025 bis 07.01.2026 unterbrochen (gut 7 Monate). Wie wird eingestuft?",o:["Als hätte es keine Unterbrechung gegeben","In die SF-Klasse vor der Unterbrechung, ohne Besserstufung","Ein schadenfreies Jahr wird abgezogen","Neueinstufung in SF 0"],c:1,e:"Über 6 bis 12 Monate: Einstufung wie vor der Unterbrechung (Ziffer I.6.3.1 b).",s:"IHK W25/26 · KBF 3, Aufgabe 3"},
+ {t:"mobil",q:"Nach wie vielen Jahren Unterbrechung verfällt der Schadenfreiheitsrabatt?",o:["Nach mehr als 1 Jahr","Nach mehr als 3 Jahren","Nach mehr als 7 Jahren","Nie"],c:2,e:"Über 7 Jahre: SFR verfällt, Neueinstufung (Ziffer I.6.3.1 d).",s:"KBF 3, Aufgabe 8"},
+ {t:"mobil",q:"Wie lange hat ein Kunde nach der Stilllegung Zeit, sein Fahrzeug wieder anzumelden, bevor der Vertrag endet?",o:["6 Monate","12 Monate","18 Monate","24 Monate"],c:2,e:"Innerhalb von 18 Monaten ab Stilllegung, sonst endet der Vertrag ohne Kündigung (Ziffer H.1.7).",s:"KBF 3, Aufgabe 8"},
+ {t:"mobil",q:"Unbekannte zerkratzen das Auto auf dem Parkplatz. Welche Versicherung zahlt?",o:["Teilkasko","Vollkasko","Kfz-Haftpflicht","Schutzbrief"],c:1,e:"Mut- oder böswillige Handlungen Dritter sind Vollkasko (Ziffer A.2.3.3). SB wird abgezogen, VK wird zurückgestuft.",s:"KBF 3, Aufgabe 19"},
+ {t:"mobil",q:"Eine Fahrerin weicht einem Reh aus und landet an der Leitplanke, ohne das Reh zu berühren. Wie wird ihr Auto reguliert?",o:["Teilkasko, weil Wildschaden","Vollkasko, weil es keinen Zusammenstoß gab","Gar nicht","Kfz-Haftpflicht"],c:1,e:"Teilkasko setzt einen Zusammenstoß mit dem Tier voraus. Ohne Kontakt ist es ein Vollkaskoschaden, der SFR in VK und KH wird belastet (Leitplanke über KH).",s:"IHK S25"},
+ {t:"mobil",q:"Ein Fahrer verursacht mit 1,3 Promille einen Unfall. Was stimmt?",o:["Vollkasko zahlt, KH auch","Vollkasko ist leistungsfrei, KH zahlt dem Opfer und nimmt bis 5.000 € Regress","Weder KH noch VK zahlen","KH zahlt nicht, das Opfer muss klagen"],c:1,e:"Ab 1,1 Promille Leistungsfreiheit in der VK. KH schützt das Opfer, Regress beim Fahrer höchstens 5.000 €.",s:"IHK W25/26"},
+ {t:"mobil",q:"Bis zu welcher Schadenhöhe muss der Versicherer auf die Möglichkeit des Rückkaufs hinweisen?",o:["250 €","500 €","1.000 €","2.500 €"],c:1,e:"Rückkauf innerhalb von 6 Monaten nach Regulierung. Bis 500 € besteht Hinweispflicht (Ziffer I.5.1).",s:"KBF 3, Aufgabe 18"},
+ {t:"mobil",q:"Welche SF-Klasse ist für ein Campingfahrzeug höchstens möglich?",o:["SF 5","SF 10","SF 25","SF 35"],c:1,e:"Höchstens SF 10 mit 45 % in der KH. Keine Typ- und Regionalklassen.",s:"KBF 3, Aufgabe 17"},
+ {t:"mobil",q:"Wann besteht vorläufige Deckung in der Kasko?",o:["Immer mit der eVB","Nur nach ausdrücklicher Zusage","Ab Zahlung des Erstbeitrags automatisch","Nie, Kasko gibt es nur mit Police"],c:1,e:"Die eVB deckt die KH (und den Schutzbrief ab Zulassung). Für Kasko braucht es eine ausdrückliche Zusage (Ziffer B.2.2).",s:"KBF 3, Aufgabe 10"},
+ {t:"mobil",q:"Ein Auto verliert Öl auf dem Flughafenparkplatz und muss abgeschleppt werden. Was zahlt die Kfz-Haftpflicht?",o:["Abschleppen und Reinigung","Nur die Reinigung der verunreinigten Fläche","Nur das Abschleppen","Nichts"],c:1,e:"KH zahlt den Schaden an der Fläche (A.5.1.1). Für das Abschleppen ist ein Schutzbrief nötig.",s:"KBF 3, Aufgabe 4 · IHK S25"},
+ {t:"mobil",q:"Ein Kunde fährt mit dem Auto nach Marokko. Was ist zu tun?",o:["Nichts, Marokko gehört zum Geltungsbereich","Deckung besonders vereinbaren und in der Internationalen Versicherungskarte vermerken","Einen Auslandsschutzbrief abschließen, sonst nichts","Eine Reiseversicherung abschließen"],c:1,e:"Voller Schutz gilt in Europa. Außereuropäische Gebiete müssen vereinbart und auf der Versicherungskarte vermerkt werden (A.1.4.2).",s:"KBF 3, Aufgabe 22"},
+ {t:"mobil",q:"Welcher Zuschlag gilt für einen Reiseversicherungs-Jahresvertrag?",o:["10 %","15 %","20 %","25 %"],c:2,e:"Beispiel: Rücktritt 427 € + 20 % = 512,40 €, Gepäck 75 € + 20 % = 90 €, dann 5 % Nachlass jährliche Zahlung und 19 % VSt.",s:"KBF 3, Aufgabe 2"},
+ {t:"mobil",q:"Ein Koffer kommt verspätet an. Wie viel zahlt die Reisegepäckversicherung bei 1.500 € VS?",o:["Nichts","150 €","750 €","1.500 €"],c:1,e:"Nicht fristgerecht zugestelltes Gepäck ist mit 10 % der VS versichert.",s:"IHK S25"},
+ {t:"mobil",q:"Ein Mountainbike wird auf der Reise vom Träger gestohlen. Wo ist es versichert?",o:["Reisegepäckversicherung","Kfz-Teilkasko","Hausratversicherung mit Fahrraddiebstahl-Klausel","Kfz-Haftpflicht"],c:2,e:"Der Fahrradträger ist als Fahrzeugteil mitversichert, das Rad nicht. Reisegepäck schließt Fahrräder aus.",s:"KBF 3, Aufgabe 22 · IHK W24/25"},
+ {t:"mobil",q:"Bei welcher Rechnung bekommt der Kunde nach einem TK-Wildschaden die Mehrwertsteuer erstattet?",o:["Beim Kostenvoranschlag","Bei konkreter Reparatur mit Rechnung","Nie","Immer"],c:1,e:"Nach Kostenvoranschlag wird netto gezahlt, bei konkreter Reparatur brutto. Kein SFR-Einfluss, SB 150 €.",s:"IHK S24"},
+ // Freizeit
+ {t:"freizeit",q:"Ein 9-Jähriger rennt auf die Straße, ein Auto weicht aus und rammt einen Stromkasten. Haftet das Kind?",o:["Ja, ab 7 ist man deliktfähig","Nein, unter 10 keine Haftung für Unfälle mit Kfz im Straßenverkehr","Ja, aber nur bis 5.000 €","Nur, wenn die Eltern zustimmen"],c:1,e:"§ 828 Abs. 2 BGB. Ohne Aufsichtspflichtverletzung haftet auch der Vater nicht, die PHV wehrt die Ansprüche ab.",s:"IHK W25/26"},
+ {t:"freizeit",q:"Welche Haftung trifft den Halter eines Hundes (Luxustier)?",o:["Verschuldenshaftung nach § 823","Haftung aus vermutetem Verschulden","Gefährdungshaftung nach § 833 S. 1","Keine Haftung"],c:2,e:"Haftung auch ohne Verschulden, keine Entlastung möglich. Nutztiere: vermutetes Verschulden (§ 833 S. 2).",s:"Einstieg GAP II"},
+ {t:"freizeit",q:"Die Ehefrau beschädigt mit dem Krankenfahrstuhl ihr eigenes Handy und die Hose eines Fremden. Was zahlt die PHV?",o:["Beides","Nur die Hose","Nur das Handy","Nichts"],c:1,e:"Krankenfahrstühle sind mitversichert. Das eigene Handy ist ein Eigenschaden. Die neue Hose wird zum Neuwert ersetzt.",s:"IHK W25/26"},
+ {t:"freizeit",q:"Ein 22-Jähriger hat seine Erstausbildung abgeschlossen. Wie ist er haftpflichtversichert?",o:["Weiter über die Eltern, bis 25","Weiter über die Eltern, solange er zu Hause wohnt","Gar nicht mehr, er braucht eine eigene PHV","Über die Arbeitgeber-Haftpflicht"],c:2,e:"Mitversicherung nur unverheiratet und bis zum Ende der Erstausbildung. Angebot Single-PHV.",s:"IHK W25/26"},
+ {t:"freizeit",q:"Gemietete Ski gehen beim Sturz kaputt. Wie reguliert die PHV?",o:["Gar nicht, Mietsachen sind ausgeschlossen","Voll ohne Abzug","Mit 100 € Selbstbeteiligung","Nur zum Zeitwert ohne SB"],c:2,e:"Schäden an gemieteten Sachen sind eingeschlossen, mit 100 € SB.",s:"IHK S24"},
+ {t:"freizeit",q:"Eine Familie baut ein Haus für 350.000 €. Was braucht sie zusätzlich zur PHV?",o:["Nichts","Eine Bauherren-Haftpflichtversicherung","Eine Gewässerschaden-Haftpflicht","Eine Rechtsschutzversicherung"],c:1,e:"Ab einer Bausumme über 200.000 € ist eine eigene Bauherren-Haftpflicht nötig (PX).",s:"IHK S25"},
+ {t:"freizeit",q:"Eine Kundin bekommt Strafzettel fürs Falschparken. Was zahlt der Verkehrs-Rechtsschutz?",o:["Alles","Nur den Anwalt","Nichts, Falschparken ist ausgeschlossen","Nur bei Ersttätern"],c:2,e:"Halt- und Parkverstöße sind ausgeschlossen (Ziffer 3.2.16). Tempoverstöße zahlt der Ordnungswidrigkeiten-RS.",s:"KBF 3, Aufgabe 24"},
+ {t:"freizeit",q:"Ein Kunde will sich vorsorglich zum Erbrecht beraten lassen, der Erbfall ist nicht eingetreten. Rechtsschutz?",o:["Ja, über Beratungs-RS","Nein, Rechtsschutzfall ist erst das Ereignis, das die Rechtslage ändert","Ja, aber mit 250 € SB","Nur im Familientarif"],c:1,e:"Im Erbrecht ist das der Tod des Erblassers. Vorsorgliche Beratung ist nicht gedeckt.",s:"IHK S25"},
+ {t:"freizeit",q:"Ein Ehepaar mietet in Chile ein Auto. Was gilt im Verkehrs-Rechtsschutz?",o:["Voller Schutz weltweit","Kein Schutz","Schutz nur bei Reisen bis 12 Wochen und bis 100.000 €","Schutz nur bis 10.000 €"],c:2,e:"Südamerika liegt außerhalb des Geltungsbereichs (Ziffer 5.2). Schadenersatz-RS hat keine Wartezeit.",s:"KBF 3, Aufgabe 25"},
+ {t:"freizeit",q:"Herr Kaiser wird in Ungarn wegen eines Verkehrsdelikts festgehalten. Was übernimmt der Rechtsschutz?",o:["Nichts im Ausland","Strafkaution, Anwalt am Gericht in Ungarn und Korrespondenzanwalt am Wohnort","Nur einen deutschen Anwalt","Nur die Strafe"],c:1,e:"Straf-RS für verkehrsrechtliche Vergehen, im europäischen Ausland bis 1 Mio. €.",s:"IHK W25/26"},
+ // Wohnen
+ {t:"wohnen",q:"Nach einem Küchenbrand ist der Parkettboden der eigenen Wohnung beschädigt. Wer zahlt ihn?",o:["Hausratversicherung","Wohngebäudeversicherung","Glasversicherung","Privathaftpflicht"],c:1,e:"Parkett ist Gebäudebestandteil. Couch und Tisch zahlt die Hausrat, Sprinklerschäden sind Brand-Folgeschäden.",s:"IHK W25/26"},
+ {t:"wohnen",q:"Wie hoch ist die Außenversicherung in der Hausrat begrenzt?",o:["5 % der VS, max. 5.000 €","10 % der VS inkl. Vorsorge, max. 10.000 €","20 % der VS, max. 20.000 €","Unbegrenzt"],c:1,e:"Ein Student ohne eigenen Hausstand ist darüber unabhängig von der Dauer versichert.",s:"IHK S25"},
+ {t:"wohnen",q:"Bei einem Einbruch ins Wohnhaus wird Bargeld gestohlen. Bis zu welcher Grenze wird es ersetzt?",o:["500 €","1.000 €","1.500 €","5.000 €"],c:2,e:"Besondere Entschädigungsgrenze Bargeld 1.500 €, Schmuck 20.000 €. Bargeld aus den Geschäftsräumen ist nicht versichert.",s:"IHK W24/25"},
+ {t:"wohnen",q:"Ein Sturm zerstört die Terrassenmöbel. Wann zahlt die Hausrat?",o:["Immer","Nie","Nur mit Klausel PK 7215","Nur mit Glasversicherung"],c:2,e:"Möbel draußen sind keine versicherte Sache. Die Klausel PK 7215 schließt Naturgefahren außerhalb von Gebäuden ein, abzüglich SB.",s:"IHK S24"},
+ {t:"wohnen",q:"Ein Brandschaden beträgt 27.300 €. VS 17.500 Mark 1914, Versicherungswert 19.900 Mark 1914. Entschädigung für die Sachen?",o:["27.300,00 €","24.007,54 €","21.000,00 €","17.500,00 €"],c:1,e:"Unterversicherung: 27.300 × 17.500 ÷ 19.900 = 24.007,54 €.",s:"IHK S25"},
+ {t:"wohnen",q:"Eine Überschwemmung entwurzelt Bäume, die auf den Carport fallen. Was zahlt die Wohngebäude?",o:["Bäume und Carport komplett","Carport (Klausel 7264) und das Wegräumen der Bäume vom Carport, nicht die Bäume selbst","Nur die Bäume","Nichts"],c:1,e:"Bäume sind trotz Klausel 7363 nicht versichert, weil die Überschwemmung sie entwurzelt hat. SB 500 € wird abgezogen.",s:"IHK W25/26"},
+ {t:"wohnen",q:"Eine Fensterscheibe zerbricht ohne versicherte Gefahr. Welche Versicherung leistet?",o:["Hausrat","Glasversicherung als Allgefahrenversicherung","Wohngebäude","Keine"],c:1,e:"Die Glasversicherung leistet, wenn keine andere Versicherung leistet, inklusive Notverglasung und Aufräumkosten.",s:"IHK W25/26"},
+ {t:"wohnen",q:"Welche Versicherungsteuer gilt für die Hausratversicherung?",o:["13,20 %","16,15 %","16,34 %","19,00 %"],c:1,e:"Wohngebäude mit Feuer 16,34 %, nur Feuer 13,20 %, Glas 19 %.",s:"Deckblatt IHK-Prüfung"},
+ // Gesundheit
+ {t:"gesund",q:"Unter welcher Bedingung wird ein Neugeborenes ohne Wartezeit in der PKV versichert?",o:["Ein Elternteil ist seit 3 Monaten versichert, Anmeldung innerhalb von 2 Monaten","Anmeldung innerhalb von 6 Monaten","Beide Eltern sind privat versichert","Das Kind ist gesund"],c:0,e:"Rückwirkend ab Geburt, ohne Risikozuschläge, Schutz nicht höher als beim Elternteil.",s:"IHK S25"},
+ {t:"gesund",q:"Ein Kunde ist seit April versichert und bricht sich bei einem Unfall im Mai einen Zahn. Was wird erstattet?",o:["Alles, weil Unfall","Krankenhaus ja, Zahnersatz erst nach Ablauf der 8-monatigen besonderen Wartezeit","Nichts, Wartezeit läuft","Nur der Zahnersatz"],c:1,e:"Die allgemeine Wartezeit entfällt bei Unfällen, die besondere nicht.",s:"IHK S25 · IHK S24"},
+ {t:"gesund",q:"Ein Kunde ist von Juli bis Oktober beruflich in Mexiko. Für welche Behandlungen leistet die Krankheitskostenversicherung?",o:["Für alle","Nur in Juli und August","Nur im Oktober","Für keine"],c:1,e:"Außereuropäisch: die ersten 2 Monate eines vorübergehenden Aufenthalts. Keine Verlängerung, da die Rückreise möglich war.",s:"IHK W25/26"},
+ {t:"gesund",q:"Ein Arzt wird ab 01.07. wegen Übertherapie ausgeschlossen. Ab wann gilt das für schwebende Behandlungen?",o:["Sofort ab 01.07.","Ab 01.10., also 3 Monate nach Benachrichtigung","Ab 01.01. des Folgejahres","Gar nicht"],c:1,e:"Beispiel: 20 Termine, 6 nach dem 01.10. Erstattet 14 × 79,15 € = 1.108,10 €, davon 50 % = 554,05 €.",s:"IHK W25/26"},
+ {t:"gesund",q:"Ein Kunde ist 57, seit 10 Jahren in der PKV und wird arbeitslos. Was gilt?",o:["Er wird GKV-pflichtig","Er wird nicht versicherungspflichtig und kann nicht in die GKV wechseln","Er kann frei wählen","Seine PKV ruht"],c:1,e:"Über 55 und länger als 5 Jahre privat versichert. Beiträge senken über Tarifwechsel, KT anpassen.",s:"IHK W25/26"},
+ {t:"gesund",q:"Wie hoch ist die JAEG 2026 im Jahr?",o:["69.750 €","73.800 €","77.400 €","101.400 €"],c:2,e:"6.450 € im Monat. 69.750 € ist die BBG KV, 101.400 € die BBG RV.",s:"RW-Skript 2026"},
+ {t:"gesund",q:"Eine Kundin ist nach einem Überfall 3 Monate arbeitsunfähig und braucht Hilfe im Haushalt. Bekommt sie Pflegegeld?",o:["Ja, Pflegegrad 1","Ja, wegen geistiger Einschränkung","Nein, die Einschränkung muss länger als 6 Monate bestehen und ein Pflegegrad festgestellt sein","Nur aus dem KT"],c:2,e:"Die PPV leistet grundsätzlich auch bei geistigen Einschränkungen, aber erst ab über 6 Monaten und nach Medicproof-Gutachten.",s:"IHK W25/26"},
+ {t:"gesund",q:"Wie viel zahlt die Pflegeversicherung für eine Maßnahme zur Wohnumfeldverbesserung?",o:["1.000 €","2.500 €","4.000 €","unbegrenzt"],c:2,e:"Bis 4.000 € je Maßnahme. Entscheidung innerhalb von 3 Wochen, Hilfsmittel vorrangig leihweise.",s:"IHK S25"},
+ {t:"gesund",q:"Eine Kundin hat nach qualifizierter Mahnung am 04.04. nicht gezahlt und liegt am 20.04. im Krankenhaus. Was gilt?",o:["Volle Leistung","Leistungsfreiheit, weil die 2-Wochen-Frist abgelaufen ist","Leistung zu 50 %","Leistung erst nach Zahlung"],c:1,e:"Zahlungsfrist 2 Wochen bis 18.04. Ab 19.04. Leistungsfreiheit, bei kündbaren Tarifen außerordentliche Kündigung.",s:"IHK S24"},
+ {t:"gesund",q:"Welche Förderung gibt es für die Pflege-Bahr-Versicherung (GEPV)?",o:["5 € im Monat","10 € im Monat","60 € im Jahr pro Pflegegrad","keine"],c:0,e:"Wartezeit 5 Jahre. Ergänzend Tarif PET mit 3 Jahren Wartezeit.",s:"IHK S24"},
+ {t:"gesund",q:"Wie hoch ist der Beihilfeanspruch einer Beamtin mit 2 Kindern?",o:["50 %","70 %","80 %","100 %"],c:1,e:"Mit 2 Kindern steigt die Beihilfe auf 70 %, der private Schutz wird auf 30 % reduziert. Kinder: 80 % Beihilfe.",s:"IHK S25"},
+ // Vorsorge
+ {t:"vorsorge",q:"Wie wird die Rente aus einer privaten Rentenversicherung (3. Schicht) besteuert?",o:["Voll","Nachgelagert nach Kohorte","Mit dem Ertragsanteil","Gar nicht"],c:2,e:"Beiträge aus versteuertem Einkommen. Rürup und Riester werden nachgelagert besteuert.",s:"IHK W25/26"},
+ {t:"vorsorge",q:"Welche Aussage zur Basisrente (Rürup) stimmt?",o:["Sie ist beleihbar","Sie kann kapitalisiert werden","Sie ist nicht vererbbar und nicht übertragbar","Rentenbeginn ab 60 möglich"],c:2,e:"Außerdem nicht beleihbar, nicht veräußerbar, nicht kapitalisierbar. Mindestrentenalter 62.",s:"IHK W24/25"},
+ {t:"vorsorge",q:"In welche Schicht gehört die Riester-Rente?",o:["1. Schicht","2. Schicht","3. Schicht","Keine"],c:1,e:"2. Schicht mit der bAV. 1. Schicht: GRV und Rürup.",s:"Einstieg GAP II"},
+ {t:"vorsorge",q:"Ein Kunde will sein unwiderrufliches Bezugsrecht auf den Bruder ändern. Was ist nötig?",o:["Nur seine Erklärung","Die schriftliche Zustimmung der bisherigen Bezugsberechtigten","Ein Notar","Das geht nicht"],c:1,e:"Unwiderruflich heißt: nur mit Zustimmung. Der Änderungswunsch des VN muss in Schriftform vorliegen.",s:"IHK S25"},
+ {t:"vorsorge",q:"Der Versicherte nimmt sich im zweiten Versicherungsjahr das Leben. Was wird gezahlt?",o:["Die volle Summe","Der Rückkaufswert","Die Unfalltod-Zusatzleistung","Nichts"],c:1,e:"Selbsttötung innerhalb der ersten 3 Jahre: Rückkaufswert. Die Unfalltod-Zusatzversicherung schließt Selbsttötung aus.",s:"IHK S25"},
+ {t:"vorsorge",q:"Zu welchem Zeitpunkt wird das Deckungskapital einer fondsgebundenen Versicherung im Todesfall bewertet?",o:["Am Todestag","Am 2. Börsentag nach Eingang der Todesfallmeldung","Zum Monatsende","Zum Ende des Versicherungsjahres"],c:1,e:"Beispiel: 98,3 Anteile × 220,66 € = 21.690,88 €.",s:"IHK W25/26"},
+ {t:"vorsorge",q:"Wann entstehen Bewertungsreserven?",o:["Wenn der Buchwert den Marktwert übersteigt","Wenn der Marktwert der Kapitalanlagen den Buchwert übersteigt","Bei jeder Beitragszahlung","Wenn der Kunde kündigt"],c:1,e:"Sie werden jährlich ermittelt, verursachungsorientiert zugeordnet und sind nicht garantiert.",s:"IHK S25"},
+ {t:"vorsorge",q:"Tarifbeitrag 1.176 € ergibt 210,08 € garantierte Rente. Wie hoch ist die garantierte Rente bei 4.976 € Beitrag?",o:["888,91 €","1.050,40 €","1.821,53 €","421,00 €"],c:0,e:"Dreisatz: 210,08 × 4.976 ÷ 1.176 = 888,91 €.",s:"IHK W25/26"},
+ {t:"vorsorge",q:"Eine Risiko-LV ist mit Beitragsverrechnung versichert. Gibt es im Todesfall zusätzliche Überschüsse?",o:["Ja, die Ansammlung","Nein, die Überschüsse wurden mit den Beiträgen verrechnet","Ja, die Bewertungsreserven","Nur bei Unfalltod"],c:1,e:"Beitragsverrechnung senkt laufend den Beitrag. Im Todesfall wird nur die Versicherungssumme gezahlt.",s:"KBF 6, Aufgabe 6"},
+ // Finanz
+ {t:"finanz",q:"Was beschreibt den Cost-Average-Effekt richtig?",o:["Einmalanlage ist immer günstiger als Sparplan","Ein fester Betrag in regelmäßigen Abständen führt zu einem günstigeren Durchschnittspreis als eine feste Stückzahl","Fondskosten sinken mit der Laufzeit","Der Ausgabeaufschlag entfällt beim Sparplan"],c:1,e:"Bei niedrigen Kursen kauft man mit demselben Betrag mehr Anteile.",s:"IHK W24/25"},
+ {t:"finanz",q:"In welche Risikoklasse ist der PROXIMUS Global Invest eingestuft?",o:["1","3","5","6"],c:3,e:"Weltweiter Aktienfonds, starke Schwankungen. Bond Invest ist Klasse 3, Cash Invest Klasse 1.",s:"IHK W24/25 · W25/26"},
+ {t:"finanz",q:"Die Marktzinsen steigen. Was passiert mit den Kursen bestehender Anleihen?",o:["Sie steigen","Sie fallen","Sie bleiben gleich","Sie steigen nur bei langer Restlaufzeit"],c:1,e:"Der Effekt ist umso stärker, je länger die Restlaufzeit. Wer bis zum Ende hält, verliert nichts.",s:"IHK S25"},
+ {t:"finanz",q:"Fondsvermögen 47,8 Mio. €, 954.091,80 Anteile, Ausgabeaufschlag 3,80 %. Wie viele Anteile bekommt man für 40.000 €?",o:["798,40","769,23","800,00","735,00"],c:1,e:"Anteilspreis 47.800.000 ÷ 954.091,80 = 50,10 €. Ausgabepreis 50,10 + 1,90 = 52,00 €. 40.000 ÷ 52 = 769,23 Anteile.",s:"IHK S24"},
+ {t:"finanz",q:"Kurs 73,10 €, Emissionskurs 59 €, Bezugsverhältnis 4:1. Wert des Bezugsrechts?",o:["2,82 €","3,53 €","14,10 €","70,28 €"],c:0,e:"(73,10 − 59,00) ÷ (4 + 1) = 2,82 €. Rechnerischer Kurs danach 70,28 €.",s:"IHK W24/25"},
+ {t:"finanz",q:"Welche Mindesthaltefrist gilt für den offenen Immobilienfonds Real Invest?",o:["Keine","12 Monate","24 Monate","5 Jahre"],c:2,e:"Mindesthaltefrist 24 Monate, Rückgabefrist 12 Monate.",s:"Übersicht der Proximus Fonds"},
+ {t:"finanz",q:"Welche Anlage hat das geringste Ausfallrisiko?",o:["Aktie mit Rating A+","Mischfonds mit AA","Bundesanleihe mit AAA","Alle gleich"],c:2,e:"AAA ist die höchste Bonität, dafür die geringste Rendite. Alle drei sind börsentäglich verkäuflich.",s:"IHK W25/26"},
+ {t:"finanz",q:"Was macht ein Dachfonds?",o:["Er investiert in Immobilien","Er investiert in Anteile anderer Investmentfonds","Er bildet einen Index ab","Er legt nur in Geldmarkttitel an"],c:1,e:"Beispiel: Strategic Invest mit Aktien- und Rentenfonds.",s:"IHK W24/25"},
+ {t:"finanz",q:"Wofür steht das G in ESG?",o:["Growth","Governance","Green","Guarantee"],c:1,e:"Environment, Social, Governance. Ethic Invest beachtet zusätzlich den UN Global Compact.",s:"IHK S24"},
+ // Einkommen
+ {t:"einkommen",q:"Invaliditätsgrad 70 %, Progression U 350, Grundsumme 40.000 €. Leistung?",o:["28.000 €","56.000 €","80.000 €","140.000 €"],c:2,e:"25 % × 1 + 25 % × 3 + 20 % × 5 = 200 %. 200 % × 40.000 € = 80.000 €.",s:"KBF 6, Aufgabe 4 · IHK W25/26"},
+ {t:"einkommen",q:"Invaliditätsgrad 35 %, Progression U 500, Grundsumme 50.000 €. Leistung?",o:["17.500 €","37.500 €","50.000 €","87.500 €"],c:1,e:"25 % × 1 + 10 % × 5 = 75 %. 75 % × 50.000 € = 37.500 €.",s:"KBF 6, Aufgabe 7"},
+ {t:"einkommen",q:"Das rechte Bein bleibt zu 40 % beeinträchtigt. Welcher Invaliditätsgrad ergibt sich?",o:["40 %","28 %","70 %","21 %"],c:1,e:"Gliedertaxe Bein 70 %, davon 40 % = 28 %.",s:"KBF 6, Aufgabe 1"},
+ {t:"einkommen",q:"Ab wie viel Prozent Mitwirkung einer Krankheit werden die PUV-Leistungen gekürzt?",o:["10 %","25 %","50 %","Nie"],c:1,e:"Beispiel: 42 % Invalidität − 25 % Mitwirkung = 31,5 %. KT und KHT werden ebenfalls um 25 % gekürzt.",s:"IHK W24/25"},
+ {t:"einkommen",q:"Eine Mutter begleitet ihre 12-jährige Tochter 7 Tage im Krankenhaus. KHT des Kindes 25 €. Was bekommt sie?",o:["Nichts","175 € Rooming-in","350 €","25 €"],c:1,e:"Kinder unter 14: Begleitperson erhält Unterbringungskosten in Höhe des KHT, 7 × 25 €.",s:"KBF 6, Aufgabe 7"},
+ {t:"einkommen",q:"Wann wird die Todesfallleistung der PUV fällig?",o:["Bei Tod innerhalb von 3 Monaten","Bei Tod infolge des Unfalls innerhalb eines Jahres","Bei jedem Tod während der Laufzeit","Nur bei Unfalltod im Straßenverkehr"],c:1,e:"Zusätzlich zahlt die PUV das KHT für die Tage im Krankenhaus an die Hinterbliebenen.",s:"KBF 6, Aufgabe 4"},
+ {t:"einkommen",q:"BU ist im Februar eingetreten, gemeldet wird sie im November. Ab wann zahlt die BU?",o:["Ab März","Ab Februar","Ab 01.11., Beginn des Monats der Mitteilung","Ab Dezember"],c:2,e:"Meldung später als 3 Monate nach Eintritt: Anspruch erst ab Beginn des Monats der Mitteilung. Beitragsbefreiung ebenfalls ab dann.",s:"KBF 6, Aufgabe 5 · IHK W25/26"},
+ {t:"einkommen",q:"Garantierte BU-Rente 912,31 €, Tarif S 35. Wie hoch ist die Monatsrente inklusive Bonus?",o:["912,31 €","1.140,39 €","1.304,60 €","2.736,93 €"],c:2,e:"912,31 € × 1,43 = 1.304,60 €. Dazu einmalig Anfangshilfe 3 × 912,31 € = 2.736,93 €.",s:"KBF 6, Aufgabe 5"},
+ {t:"einkommen",q:"Ab welchem Grad leistet die gesetzliche Unfallversicherung?",o:["1 %","10 %","20 %","50 %"],c:2,e:"GUV ab 20 % MdE, nur Arbeits- und Wegeunfall und Berufskrankheit. PUV ab 1 %.",s:"Einstieg GAP II"},
+ {t:"einkommen",q:"Wann ist jemand voll erwerbsgemindert?",o:["Unter 3 Stunden täglich arbeitsfähig","Unter 6 Stunden","Wenn er seinen Beruf nicht mehr ausüben kann","Ab 50 % BU"],c:0,e:"Teilweise: 3 bis unter 6 Stunden. Maßstab ist jede Tätigkeit am allgemeinen Arbeitsmarkt.",s:"Lernzusammenfassung PUV & BU"},
+ {t:"einkommen",q:"Risiko-LV 300.000 € plus Unfalltod-Zusatz 75.000 €, Abtretung an die Bank, Restschuld 42.522 €. Was erhält die Ehefrau?",o:["375.000 €","332.478 €","257.478 €","300.000 €"],c:1,e:"375.000 − 42.522 = 332.478 €. Der Vertrag endet mit dem Tod.",s:"KBF 6, Aufgabe 2"},
+ {t:"einkommen",q:"Ein Kunde der PUV wird 67. Was ändert sich im Tarif?",o:["Nichts","Wechsel in Tarif 50: Invalidität ohne Progression, KT entfällt, KHT auf 25 €","Der Vertrag endet automatisch","Nur der Beitrag steigt"],c:1,e:"Wahlrecht: Prämie beibehalten mit neuen Summen oder Summen beibehalten mit neuer Prämie. Kündigung innerhalb 1 Monats möglich.",s:"IHK W25/26"},
+ // RW
+ {t:"rw",q:"Die Agentur gewährt einer Mitarbeiterin ein Darlehen von 500 € per Bank. Auswirkung?",o:["Aufwand 500 €, Gewinn sinkt","Aktivtausch, keine Auswirkung auf die GuV","Aktiv-Passiv-Minderung","Passivtausch"],c:1,e:"Forderungen gegen AN steigen, Bank sinkt. Die Bilanzsumme bleibt gleich.",s:"IHK W25/26"},
+ {t:"rw",q:"Eine Rückstellung von 4.140 € wird im neuen Jahr genau in dieser Höhe bezahlt. Was passiert?",o:["Außerordentlicher Ertrag","Außerordentlicher Aufwand","Keine GuV-Wirkung, Aktiv-Passiv-Minderung","Aktivtausch"],c:2,e:"Rückstellung und Bank sinken um 4.140 €. Wäre die Zahlung niedriger, entstünde ein ao. Ertrag.",s:"IHK S25"},
+ {t:"rw",q:"Pkw: AK 20.000 €, 5 Jahre linear, nach 3 Jahren für 9.000 € verkauft. Folge?",o:["1.000 € außerordentlicher Ertrag","1.000 € außerordentlicher Aufwand","Kein Erfolg","9.000 € Ertrag"],c:0,e:"Restbuchwert 20.000 − 3 × 4.000 = 8.000 €. Verkauf darüber = ao. Ertrag.",s:"RW-Skript 2026"},
+ {t:"rw",q:"Wie wird der kalkulatorische Unternehmerlohn erfasst?",o:["Als Grundkosten","Als Anderskosten","Als Zusatzkosten","Als neutraler Aufwand"],c:2,e:"Er mindert das Betriebsergebnis, aber nicht den steuerlichen Gewinn, weil er in der Fibu kein Aufwand ist.",s:"IHK W24/25"},
+ {t:"rw",q:"Zu welcher Kostenart gehört die kalkulatorische Abschreibung?",o:["Grundkosten","Anderskosten","Zusatzkosten","Neutraler Aufwand"],c:1,e:"Gleicher Sachverhalt wie in der Fibu, aber anderer Wert.",s:"RW-Skript 2026"},
+ {t:"rw",q:"Aufwendungen für Versicherungsfälle 492, Beitragseinnahmen 618,5 (Mio. €). Schadenquote?",o:["5,29 %","62,90 %","79,55 %","125,71 %"],c:2,e:"492 × 100 ÷ 618,5 = 79,55 %. Verwaltungskostenquote mit 32,7: 5,29 %.",s:"IHK W25/26"},
+ {t:"rw",q:"Beitragsbestand steigt von 242.423 € auf 273.212 €. Zuwachsrate?",o:["11,27 %","12,70 %","30,79 %","88,73 %"],c:1,e:"(273.212 − 242.423) × 100 ÷ 242.423 = 12,70 %.",s:"IHK W24/25"},
+ {t:"rw",q:"Stromtarif 1: 0,325 €/kWh + 144 € Grundgebühr. Tarif 2: 0,305 €/kWh + 240 €. Ab welchem Verbrauch sind beide gleich teuer?",o:["4.000 kWh","4.800 kWh","5.000 kWh","7.200 kWh"],c:1,e:"0,325x + 144 = 0,305x + 240 → 0,02x = 96 → x = 4.800 kWh.",s:"IHK W25/26"},
+ {t:"rw",q:"Laut Inventur sind 50 € mehr in der Kasse als gebucht. Was ist zu buchen?",o:["Kassendifferenz-Aufwand","Kassendifferenz-Ertrag","Privateinlage","Nichts"],c:1,e:"Vermutlich fehlt ein Einnahmebeleg. Erfolgswirksame Korrektur über den Ertrag.",s:"RW-Skript 2026"},
+ {t:"rw",q:"Der GA zahlt im Auftrag des VU eine Entschädigung an einen Kunden. Wie wirkt das?",o:["Aufwand beim GA","Forderungen gegen Direktion steigen, kein Aufwand","Verbindlichkeit beim GA","Provisionsaufwand"],c:1,e:"Entschädigung und Regulierungsaufwand schließen über Forderungen gegen Direktion ab.",s:"RW-Skript 2026"},
+ {t:"rw",q:"Im Dezember wird die Miete für Dezember, Januar und Februar überwiesen. Was bucht der Mieter am 31.12.?",o:["Sonstige Verbindlichkeit","Aktive Rechnungsabgrenzung für 2 Monate","Passive Rechnungsabgrenzung","Rückstellung"],c:1,e:"Aufwand im alten Jahr bezahlt, gehört ins neue: ARA. Beim Vermieter wäre es eine PRA.",s:"RW-Skript 2026"},
+ {t:"rw",q:"Wie hoch ist der KV-Anteil des Arbeitnehmers bei 2,5 % Zusatzbeitrag?",o:["7,3 %","8,55 %","14,6 %","17,1 %"],c:1,e:"(14,6 % + 2,5 %) ÷ 2 = 8,55 %.",s:"RW-Skript 2026"},
+ {t:"rw",q:"Was besagt die Liquidität 1. Grades?",o:["Anteil des EK am Gesamtkapital","Anteil der flüssigen Mittel am kurzfristigen Fremdkapital","Deckung des AV durch EK","Verhältnis von Gewinn zu EK"],c:1,e:"Über 100 %: kurzfristige Verbindlichkeiten sind durch flüssige Mittel gedeckt.",s:"IHK S24"},
+ {t:"rw",q:"Wohin gehören die Zinsen für eine Hypothek auf das Agenturgebäude?",o:["Zinsaufwand","Haus- und Grundstücksaufwand","Mietaufwand","Verwaltungsaufwand"],c:1,e:"Zusammen mit Grundsteuer, Gebäudeversicherung und Abschreibung auf das Gebäude.",s:"RW-Skript 2026"},
+ // WiSo
+ {t:"wiso",q:"Frau Krause bestellt durch einen Schreibfehler 200.000 statt 20.000 Blatt. Was gilt?",o:["Vertrag nichtig","Vertrag unwirksam","Vertrag wirksam, Anfechtung möglich","Vertrag wirksam, keine Anfechtung"],c:2,e:"Erklärungsirrtum: wirksam, aber anfechtbar.",s:"WiSo W25/26"},
+ {t:"wiso",q:"Die PROXIMUS mietet eine Lagerhalle. Wer ist Besitzer, wer Eigentümer?",o:["PROXIMUS ist beides","PROXIMUS Besitzer (tatsächliche Gewalt), Vermieter Eigentümer (rechtliche Gewalt)","Vermieter ist beides","PROXIMUS Eigentümer nach Grundbucheintrag"],c:1,e:"Besitz = tatsächliche, Eigentum = rechtliche Verfügungsgewalt.",s:"WiSo W24/25 · W25/26"},
+ {t:"wiso",q:"Ein gekaufter Herd ist defekt, der Mangel wurde sofort gerügt. Welches Recht hat der Käufer zunächst?",o:["Minderung","Rücktritt","Nacherfüllung","Schadenersatz"],c:2,e:"Nacherfüllung hat Vorrang.",s:"WiSo W25/26"},
+ {t:"wiso",q:"Welche Tätigkeit darf in einer Agentur nur der Prokurist vornehmen (nicht der Handlungsbevollmächtigte)?",o:["Geschäftsaufgabe","Standardbriefe unterschreiben","Bilanz unterschreiben","Ein Grundstück erwerben"],c:3,e:"Grundstückserwerb ist mit Prokura möglich. Bilanz und Geschäftsaufgabe bleiben dem Inhaber vorbehalten.",s:"WiSo W25/26"},
+ {t:"wiso",q:"Bei 140 € werden 800 Stück nachgefragt und 800 angeboten. Bei 80 € stehen 1.200 Nachfrage nur 300 Angebot gegenüber. Was liegt bei 80 € vor?",o:["Marktgleichgewicht","Angebotsüberhang","Nachfrageüberhang","Käufermarkt"],c:2,e:"Gleichgewichtspreis ist 140 €. Darunter übersteigt die Nachfrage das Angebot.",s:"WiSo W25/26"},
+ {t:"wiso",q:"Welche Maßnahme der EZB erhöht die Geldmenge?",o:["Mindestreservesatz erhöhen","Wertpapiere an Banken verkaufen","Hauptrefinanzierungssatz senken","Einlagezins erhöhen"],c:2,e:"Ebenso: Wertpapiere von Banken kaufen.",s:"WiSo W24/25 · W25/26"},
+ {t:"wiso",q:"245 Beschäftigte, davon 4 leitende Angestellte, alle anderen mindestens 16. Wie viele sind für den Betriebsrat wahlberechtigt?",o:["245","241","224","212"],c:1,e:"Leitende Angestellte zählen nicht. 224 Angestellte + 17 Azubis = 241. Das ergibt 9 Betriebsratsmitglieder.",s:"WiSo W25/26"},
+ {t:"wiso",q:"Welche Klausel im Arbeitsvertrag verstößt gegen das Gesetz?",o:["Gehalt am 28. des Monats","Verschwiegenheit über Betriebsgeheimnisse","19 Werktage Urlaub im Jahr","Meldung der Arbeitsunfähigkeit"],c:2,e:"Der gesetzliche Mindesturlaub beträgt 24 Werktage.",s:"WiSo W25/26"},
+ {t:"wiso",q:"Worin unterscheidet sich die Probezeit in der Ausbildung vom Arbeitsverhältnis?",o:["Gar nicht","In der Ausbildung ist sie Pflicht (mind. 1 Monat), im Arbeitsverhältnis optional","Ausbildung max. 3 Monate, Arbeitsverhältnis 12","Kündigung in der Ausbildung nur mit Grund"],c:1,e:"Ausbildung: 1 bis 4 Monate. Arbeitsverhältnis: höchstens 6 Monate mit 2 Wochen Frist.",s:"WiSo W25/26"},
+ {t:"wiso",q:"Welche Beendigung eines Ausbildungsverhältnisses ist nicht zulässig?",o:["Nach bestandener Prüfung","Fristlos in der Probezeit","Aus wichtigem Grund nach der Probezeit","Kündigung des Azubis ohne Grund nach der Probezeit, weil er woanders mehr verdient"],c:3,e:"Nach der Probezeit kann der Azubi nur aus wichtigem Grund oder bei Aufgabe der Ausbildung kündigen.",s:"WiSo W25/26"},
+ {t:"wiso",q:"Eine Mitarbeiterin (18 Monate im Betrieb) soll zum 31.03.2025 gekündigt werden. Spätester Zugang der Kündigung?",o:["28.02.2025","03.03.2025","15.03.2025","01.02.2025"],c:1,e:"Unter 2 Jahren: 4 Wochen zum 15. oder Monatsende. 31.03. minus 28 Tage = 03.03.2025.",s:"WiSo W24/25"},
+ {t:"wiso",q:"Wer zahlt die Beiträge zur Berufsgenossenschaft?",o:["Arbeitnehmer und Arbeitgeber je zur Hälfte","Der Arbeitgeber allein","Der Arbeitnehmer allein","Der Staat"],c:1,e:"Eine bessere Gefahrenklasse ändert deshalb nichts an der Gehaltsabrechnung.",s:"WiSo W25/26"},
+ {t:"wiso",q:"Wann dürfen Arbeitnehmer streiken?",o:["Jederzeit während der Verhandlungen","Erst nach Ablauf des alten Tarifvertrags","Erst nach 95 % Beteiligung an der Urabstimmung","Erst nach dem Schlichterspruch"],c:1,e:"Während der Laufzeit gilt die Friedenspflicht.",s:"WiSo W25/26"},
+ {t:"wiso",q:"Was kennzeichnet eine Stabsstelle?",o:["Sie entscheidet über Fachfragen","Leitungshilfsstelle ohne Weisungsbefugnis","Sie ist die Personalabteilung","Sie vertritt den Betriebsrat"],c:1,e:"Sie berät die Leitung, z. B. zur Digitalisierung im Vertrieb.",s:"WiSo W25/26"},
+ {t:"wiso",q:"Welche Maßnahme trägt unmittelbar zum Umweltschutz bei?",o:["Aushänge zur Mülltrennung","Kredit für eine Kläranlage","Portable Klimageräte","Informationen über das Intranet statt Papierrundschreiben"],c:3,e:"Papier wird direkt eingespart.",s:"WiSo W25/26"},
+ {t:"wiso",q:"Wie hoch ist der Gewinnanteil eines GmbH-Gesellschafters mit 24.000 € von 120.000 € Einlagen bei 62.000 € Gewinn?",o:["20.666,67 €","12.400,00 €","15.500,00 €","24.000,00 €"],c:1,e:"Gesetzlich nach Geschäftsanteilen: 24/120 × 62.000 € = 12.400 €.",s:"WiSo W24/25"}
+];
+
+/* ---------- Zustand ---------- */
+const STORE_KEY = "gap2-trainer-v1";
+let state = {topics:[], mode:"sum", cards:{}, quiz:{answered:0, right:0, wrong:{}}};
+try{ const raw = localStorage.getItem(STORE_KEY); if(raw){ state = Object.assign(state, JSON.parse(raw)); } }catch(e){}
+try{ const h = location.hash.replace("#",""); if(["sum","cards","quiz"].includes(h)) state.mode = h; }catch(e){}
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const topicName = id => (TOPICS.find(t=>t.id===id)||{}).name || id;
+const active = id => state.topics.length===0 || state.topics.includes(id);
+const fmt = n => n.toLocaleString("de-DE");
+
+/* ---------- Countdown ---------- */
+function countdown(){
+  const now = new Date();
+  const d1 = Math.ceil((new Date("2026-11-24T08:00:00+01:00") - now)/864e5);
+  const d2 = Math.ceil((new Date("2026-11-25T14:00:00+01:00") - now)/864e5);
+  $("#cdDays").textContent = d1 > 0 ? d1 : "0";
+  $("#cdDays2").textContent = d2 > 0 ? d2 : "0";
+}
+
+/* ---------- Themen ---------- */
+function renderTopics(){
+  const el = $("#topics");
+  el.innerHTML = `<button class="chip" data-t="" aria-pressed="${state.topics.length===0}">Alle Themen</button>` +
+    TOPICS.map(t=>`<button class="chip" data-t="${t.id}" aria-pressed="${state.topics.includes(t.id)}">${esc(t.name)}<span class="pts">${esc(t.pts)}</span></button>`).join("");
+  el.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{
+    const id = b.dataset.t;
+    if(!id) state.topics = [];
+    else state.topics = state.topics.includes(id) ? state.topics.filter(x=>x!==id) : [...state.topics, id];
+    save(); deck = null; quizRun = null; renderAll();
+  });
+}
+
+/* ---------- Statistik ---------- */
+function renderStats(){
+  const total = CARDS.length;
+  const known = CARDS.filter((c,i)=>(state.cards[i]||0)>=2).length;
+  $("#stCards").textContent = `${known} / ${total}`;
+  $("#barCards").style.width = (known/total*100)+"%";
+  const a = state.quiz.answered, r = state.quiz.right;
+  $("#stQuiz").textContent = a ? Math.round(r/a*100)+" %" : "–";
+  $("#barQuiz").style.width = a ? (r/a*100)+"%" : "0";
+  $("#stWrong").textContent = Object.keys(state.quiz.wrong).length;
+  $("#cntCards").textContent = CARDS.filter(c=>active(c[0])).length;
+  $("#cntQuiz").textContent = QUIZ.filter(q=>active(q.t)).length;
+}
+
+/* ---------- Tabs ---------- */
+function setMode(m){
+  state.mode = m; save();
+  document.querySelectorAll("nav.modes button").forEach(b=>b.setAttribute("aria-selected", b.dataset.mode===m));
+  ["sum","cards","quiz"].forEach(k=> $("#panel-"+k).hidden = k!==m);
+  try{ history.replaceState(null,"","#"+m); }catch(e){}
+}
+document.querySelectorAll("nav.modes button").forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
+
+/* ---------- Lernzettel ---------- */
+function renderSum(){
+  const ids = TOPICS.map(t=>t.id).filter(active);
+  $("#panel-sum").innerHTML = ids.map((id,idx)=>{
+    const s = SUMS[id];
+    const nCards = CARDS.filter(c=>c[0]===id).length, nQ = QUIZ.filter(q=>q.t===id).length;
+    return `<details class="sum" ${idx===0?"open":""}>
+      <summary><h2>${esc(topicName(id))}</h2><span class="meta"><span class="mono">${nCards} Karten · ${nQ} Fragen</span><span class="tog" aria-hidden="true">+</span></span></summary>
+      <div class="sum-body">
+        <section>${s.sections.map(([h,items])=>`<h3>${esc(h)}</h3><ul>${items.map(i=>`<li>${esc(i)}</li>`).join("")}</ul>`).join("")}
+          <div class="src">Quellen: ${esc(s.src)}</div></section>
+        <aside class="keys"><span class="label">Zahlen und Paragrafen</span><dl>${s.keys.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl></aside>
+      </div></details>`;
+  }).join("");
+}
+
+/* ---------- Karteikarten (Leitner, Fächer 0–3) ---------- */
+let deck = null, deckPos = 0, flipped = false;
+function buildDeck(){
+  const idx = CARDS.map((c,i)=>i).filter(i=>active(CARDS[i][0]));
+  idx.sort((a,b)=>(state.cards[a]||0)-(state.cards[b]||0) || Math.random()-.5);
+  deck = idx; deckPos = 0; flipped = false;
+}
+function renderCards(){
+  if(!deck) buildDeck();
+  const p = $("#panel-cards");
+  const all = CARDS.map((c,i)=>i).filter(i=>active(CARDS[i][0]));
+  const boxes = [0,1,2,3].map(b=>all.filter(i=>Math.min(state.cards[i]||0,3)===b).length);
+  const head = `<div class="deckbar">
+      <div class="boxes" aria-label="Lernfächer">${["Neu/Nochmal","Fach 1","Fach 2","Sicher"].map((n,b)=>`<span class="box">${n}: ${boxes[b]}</span>`).join("")}</div>
+      <div class="row"><button class="btn ghost" id="shuffle">Neu mischen</button><button class="btn ghost" id="resetCards">Fächer zurücksetzen</button></div>
+    </div>`;
+  if(deck.length===0){ p.innerHTML = head + `<div class="empty">Für die gewählten Themen gibt es keine Karten.</div>`; bindDeckBar(); return; }
+  if(deckPos>=deck.length){
+    p.innerHTML = head + `<div class="qcard result"><span class="label">Durchgang beendet</span><div class="big">${deck.length}</div><p>Karten wiederholt. Karten mit „Nochmal“ kommen im nächsten Durchgang zuerst.</p><button class="btn primary" id="again">Nächster Durchgang</button></div>`;
+    bindDeckBar(); $("#again").onclick=()=>{buildDeck(); renderCards();}; return;
+  }
+  const i = deck[deckPos], c = CARDS[i];
+  p.innerHTML = head + `
+    <div class="row" style="justify-content:space-between"><span class="label">${esc(topicName(c[0]))} · Fach ${Math.min(state.cards[i]||0,3)}</span><span class="mono">${deckPos+1} / ${deck.length}</span></div>
+    <button class="card ${flipped?"flipped":""}" id="card" aria-label="Karte umdrehen">
+      <div class="card-inner">
+        <div class="face front"><span class="label">Frage</span><div class="q">${esc(c[1])}</div><div class="hint">Antippen oder Leertaste zum Umdrehen</div></div>
+        <div class="face back"><span class="label">Antwort</span><div class="q" style="font-size:1.05rem;color:var(--ink-soft)">${esc(c[1])}</div><div class="a">${esc(c[2])}</div></div>
+      </div>
+    </button>
+    <div class="rate">
+      <button class="btn again" id="rAgain" ${flipped?"":"disabled"}>Nochmal <span class="mono">1</span></button>
+      <button class="btn good" id="rGood" ${flipped?"":"disabled"}>Gewusst <span class="mono">2</span></button>
+    </div>`;
+  bindDeckBar();
+  $("#card").onclick = ()=>{ flipped = !flipped; $("#card").classList.toggle("flipped",flipped); $("#rAgain").disabled = $("#rGood").disabled = !flipped; };
+  $("#rAgain").onclick = ()=>rate(false);
+  $("#rGood").onclick = ()=>rate(true);
+}
+function bindDeckBar(){
+  const s = $("#shuffle"); if(s) s.onclick=()=>{buildDeck(); renderCards();};
+  const r = $("#resetCards"); if(r) r.onclick=()=>{
+    if(r.dataset.confirm){ CARDS.forEach((c,i)=>{ if(active(c[0])) delete state.cards[i]; }); save(); buildDeck(); renderCards(); renderStats(); }
+    else { r.dataset.confirm="1"; r.textContent="Wirklich zurücksetzen?"; setTimeout(()=>{ if(r.isConnected){ delete r.dataset.confirm; r.textContent="Fächer zurücksetzen"; } },3000); }
+  };
+}
+function rate(good){
+  const i = deck[deckPos];
+  state.cards[i] = good ? Math.min((state.cards[i]||0)+1, 3) : 0;
+  save(); deckPos++; flipped = false; renderCards(); renderStats();
+}
+
+/* ---------- Quiz ---------- */
+let quizRun = null;
+function quizStart(kind, n){
+  let pool = QUIZ.map((q,i)=>i).filter(i=>active(QUIZ[i].t));
+  if(kind==="wrong") pool = pool.filter(i=>state.quiz.wrong[i]);
+  pool.sort(()=>Math.random()-.5);
+  quizRun = {items: pool.slice(0, n||pool.length), pos:0, right:0, picked:null, kind};
+  renderQuiz();
+}
+function renderQuiz(){
+  const p = $("#panel-quiz");
+  const pool = QUIZ.filter(q=>active(q.t)).length;
+  const wrongN = Object.keys(state.quiz.wrong).filter(i=>active(QUIZ[i].t)).length;
+  if(!quizRun){
+    p.innerHTML = `<div class="qcard">
+      <span class="label">Prüfungsfragen aus den IHK-Lösungen</span>
+      <div class="qtext">${pool} Fragen in den gewählten Themen. Jede Antwort zeigt den Lösungsweg mit Quelle.</div>
+      <div class="row">
+        <label for="qN" class="label" style="letter-spacing:.06em">Anzahl</label>
+        <select id="qN"><option value="10">10 Fragen</option><option value="20">20 Fragen</option><option value="0">Alle</option></select>
+        <button class="btn primary" id="qGo" ${pool?"":"disabled"}>Quiz starten</button>
+        <button class="btn again" id="qWrong" ${wrongN?"":"disabled"}>Fehler wiederholen (${wrongN})</button>
+      </div></div>`;
+    $("#qGo").onclick=()=>quizStart("all", +$("#qN").value);
+    $("#qWrong").onclick=()=>quizStart("wrong", 0);
+    return;
+  }
+  const r = quizRun;
+  if(r.pos>=r.items.length){
+    const pct = r.items.length ? Math.round(r.right/r.items.length*100) : 0;
+    p.innerHTML = `<div class="qcard result"><span class="label">Ergebnis</span><div class="big">${r.right} / ${r.items.length}</div>
+      <p>${pct} % richtig. ${pct>=92?"Das wäre eine 1.":pct>=81?"Das wäre eine 2.":pct>=67?"Das wäre eine 3.":pct>=50?"Das wäre eine 4. Bestanden, aber da geht noch was.":"Unter 50 %. Lies die Lernzettel und wiederhole die Fehler."}</p>
+      <span class="mono">IHK-Schlüssel: 1 ab 92 · 2 ab 81 · 3 ab 67 · 4 ab 50 Punkten</span>
+      <div class="row" style="justify-content:center"><button class="btn primary" id="qNew">Neues Quiz</button><button class="btn again" id="qW2" ${Object.keys(state.quiz.wrong).length?"":"disabled"}>Fehler wiederholen</button></div></div>`;
+    $("#qNew").onclick=()=>{quizRun=null; renderQuiz();};
+    $("#qW2").onclick=()=>quizStart("wrong",0);
+    return;
+  }
+  const qi = r.items[r.pos], q = QUIZ[qi], done = r.picked!==null;
+  p.innerHTML = `<div class="qcard">
+    <div class="qhead"><span class="label">${esc(topicName(q.t))}${r.kind==="wrong"?" · Fehler wiederholen":""}</span><span class="mono">Frage ${r.pos+1} / ${r.items.length} · ${r.right} richtig</span></div>
+    <div class="bar"><i style="width:${r.pos/r.items.length*100}%"></i></div>
+    <div class="qtext">${esc(q.q)}</div>
+    <div class="opts">${q.o.map((o,k)=>{
+      let cls = ""; if(done){ if(k===q.c) cls="right"; else if(k===r.picked) cls="wrong"; }
+      return `<button class="opt ${cls}" data-k="${k}" ${done?"disabled":""}><span class="k">${k+1}</span><span>${esc(o)}</span></button>`;}).join("")}</div>
+    ${done?`<div class="explain"><span class="label">${r.picked===q.c?"Richtig":"Nicht ganz"} · Lösung</span>${esc(q.e)}<div class="src">Quelle: ${esc(q.s)}</div></div>
+      <div class="row"><button class="btn primary" id="qNext">${r.pos+1<r.items.length?"Nächste Frage":"Auswertung"} <span class="mono">↵</span></button><button class="btn ghost" id="qStop">Quiz beenden</button></div>`:""}
+  </div>`;
+  p.querySelectorAll(".opt").forEach(b=>b.onclick=()=>pick(+b.dataset.k));
+  if(done){ $("#qNext").onclick=next; $("#qStop").onclick=()=>{quizRun=null; renderQuiz();}; $("#qNext").focus({preventScroll:true}); }
+}
+function pick(k){
+  const r = quizRun; if(r.picked!==null) return;
+  const qi = r.items[r.pos], ok = k===QUIZ[qi].c;
+  r.picked = k; state.quiz.answered++;
+  if(ok){ r.right++; state.quiz.right++; delete state.quiz.wrong[qi]; } else { state.quiz.wrong[qi] = 1; }
+  save(); renderQuiz(); renderStats();
+}
+function next(){ quizRun.pos++; quizRun.picked=null; renderQuiz(); }
+
+/* ---------- Tastatur ---------- */
+document.addEventListener("keydown", e=>{
+  if(e.target.closest && e.target.closest("select,input")) return;
+  if(state.mode==="cards" && deck && deckPos<deck.length){
+    if(e.key===" "){ e.preventDefault(); $("#card") && $("#card").click(); }
+    if(flipped && e.key==="1") rate(false);
+    if(flipped && e.key==="2") rate(true);
+  }
+  if(state.mode==="quiz" && quizRun && quizRun.pos<quizRun.items.length){
+    if(quizRun.picked===null && /^[1-5]$/.test(e.key)){ const k=+e.key-1; if(k<QUIZ[quizRun.items[quizRun.pos]].o.length) pick(k); }
+    else if(quizRun.picked!==null && e.key==="Enter"){ e.preventDefault(); next(); }
+  }
+});
+
+function renderAll(){ renderTopics(); renderStats(); renderSum(); renderCards(); renderQuiz(); setMode(state.mode); }
+countdown(); renderAll();
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+</script>
+</html>
