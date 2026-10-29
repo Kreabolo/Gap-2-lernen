@@ -4,7 +4,7 @@ Lern-App für die Abschlussprüfung Teil 2 (GAP II) Kaufmann/-frau für Versiche
 
 Die App läuft im Browser und lässt sich auf dem Handy oder PC installieren. Nach dem ersten Öffnen funktioniert sie auch offline. Der Lernstand bleibt lokal im Browser des jeweiligen Geräts gespeichert.
 
-**App öffnen:** https://kreabolo.github.io/gap-2-lernen/
+**App öffnen:** https://kreabolo.github.io/Gap-2-lernen/
 
 ## Installieren
 
