@@ -13,6 +13,10 @@ function load(raw){
   const s = Object.assign(defaults(), raw);
   s.quiz = Object.assign(defaults().quiz, raw.quiz||{});
   if(!MODES.includes(s.mode)) s.mode = "home";
+  const prune = (o, n) => Object.keys(o).forEach(k=>{ if(!(+k < n)) delete o[k]; });
+  prune(s.cards, CARDS.length); prune(s.star, CARDS.length);
+  prune(s.quiz.wrong, QUIZ.length); prune(s.quiz.ok, QUIZ.length);
+  if(s.examRun && s.examRun.items.some(i=>i>=QUIZ.length)) s.examRun = null;
   return s;
 }
 try{ const raw = localStorage.getItem(STORE_KEY); if(raw) state = load(JSON.parse(raw)); }catch(e){}
@@ -29,7 +33,7 @@ const eur = n => n.toLocaleString("de-DE",{style:"currency",currency:"EUR"});
 const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
 const range = n => Array.from({length:n},(_, i)=>i);
 const box = i => Math.min(state.cards[i]||0, 3);
-const grade = pct => pct>=92?1:pct>=81?2:pct>=67?3:pct>=50?4:pct>=30?5:6;
+const grade = pct => pct>=92?1:pct>=81?2:pct>=67?3:pct>=50?4:"✗";
 function dayKey(d=new Date()){ return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function track(n=1){
   const k = dayKey(); state.days[k] = (state.days[k]||0) + n;
@@ -171,7 +175,7 @@ function renderHome(){
       <div class="stat"><span class="label">Karten sicher</span><b>${known} / ${CARDS.length}</b><div class="bar"><i style="width:${known/CARDS.length*100}%"></i></div></div>
       <div class="stat"><span class="label">Quiz-Trefferquote</span><b>${a?Math.round(r/a*100)+" %":"–"}</b><div class="bar"><i style="width:${a?r/a*100:0}%"></i></div></div>
       <div class="stat"><span class="label">Fragen gelöst</span><b>${QUIZ.length-openQ} / ${QUIZ.length}</b><div class="bar"><i style="width:${(QUIZ.length-openQ)/QUIZ.length*100}%"></i></div></div>
-      <div class="stat"><span class="label">Letzte Simulation</span><b>${lastExam?Math.round(lastExam.r/lastExam.n*100)+" %":"–"}</b><small>${lastExam?`Note ${grade(Math.round(lastExam.r/lastExam.n*100))} · ${new Date(lastExam.d).toLocaleDateString("de-DE")}`:"noch keine Prüfung simuliert"}</small></div>
+      <div class="stat"><span class="label">Letzte Simulation</span><b>${lastExam?Math.round(lastExam.r/lastExam.n*100)+" %":"–"}</b><small>${lastExam?`${grade(Math.round(lastExam.r/lastExam.n*100))==="✗"?"nicht bestanden":"Note "+grade(Math.round(lastExam.r/lastExam.n*100))} · ${new Date(lastExam.d).toLocaleDateString("de-DE")}`:"noch keine Prüfung simuliert"}</small></div>
     </div>
 
     ${weak && (known||a) ? `<div class="tip" style="${tc(weak.id)}"><div><span class="label">Empfehlung</span>
@@ -375,10 +379,10 @@ function renderQuiz(){
   if(r.pos>=r.items.length){
     const pct = r.items.length ? Math.round(r.right/r.items.length*100) : 0, g = grade(pct);
     p.innerHTML = `<div class="qcard result"><span class="label">Ergebnis</span>
-      <div class="grade ${g>4?"fail":""}">${g}</div>
+      <div class="grade ${g==="✗"?"fail":""}">${g}</div>
       <div class="big">${r.right} / ${r.items.length}</div>
-      <p>${pct} % richtig. ${g===1?"Hervorragend!":g===2?"Sehr ordentlich.":g===3?"Solide, da geht noch was.":g===4?"Bestanden, aber knapp. Wiederhole die Fehler.":"Noch nicht bestanden. Lies die Lernzettel und wiederhole die Fehler."}</p>
-      <span class="mono">IHK-Schlüssel: 1 ab 92 · 2 ab 81 · 3 ab 67 · 4 ab 50 · 5 ab 30 Punkten</span>
+      <p>${pct} % richtig. ${g===1?"Hervorragend!":g===2?"Sehr ordentlich.":g===3?"Solide, da geht noch was.":g===4?"Bestanden, aber knapp. Wiederhole die Fehler.":"Unter 50 %, nicht bestanden. Lies die Lernzettel und wiederhole die Fehler."}</p>
+      <span class="mono">IHK-Schlüssel: 1 ab 92 · 2 ab 81 · 3 ab 67 · 4 ab 50 Punkten</span>
       <div class="row" style="justify-content:center"><button class="btn primary" id="qNew">Neues Quiz</button><button class="btn again" id="qW2" ${Object.keys(state.quiz.wrong).length?"":"disabled"}>Fehler wiederholen</button></div></div>`;
     $("#qNew").onclick = ()=>{ quizRun = null; renderQuiz(); };
     $("#qW2").onclick = ()=>quizStart("wrong", 0);
@@ -467,7 +471,7 @@ function renderExam(){
         </div>
         <div class="row"><button class="btn primary" id="exGo"><svg><use href="#i-timer"/></svg>Simulation starten</button></div>
       </div>
-      ${hist.length?`<div class="box-card"><span class="label">Bisherige Simulationen</span><div class="history" style="margin-top:8px">${hist.map(h=>{ const pct = Math.round(h.r/h.n*100); return `<div><span>${new Date(h.d).toLocaleDateString("de-DE")} · ${h.kind==="wiso"?"WiSo":h.kind==="fach"?"Fachteil":"Gemischt"}</span><span class="mono">${h.r}/${h.n} · ${pct} % · Note ${grade(pct)}</span></div>`; }).join("")}</div></div>`:""}`;
+      ${hist.length?`<div class="box-card"><span class="label">Bisherige Simulationen</span><div class="history" style="margin-top:8px">${hist.map(h=>{ const pct = Math.round(h.r/h.n*100); return `<div><span>${new Date(h.d).toLocaleDateString("de-DE")} · ${h.kind==="wiso"?"WiSo":h.kind==="fach"?"Fachteil":"Gemischt"}</span><span class="mono">${h.r}/${h.n} · ${pct} % · ${grade(pct)==="✗"?"nicht bestanden":"Note "+grade(pct)}</span></div>`; }).join("")}</div></div>`:""}`;
     $("#exGo").onclick = ()=>{ const k = $("#exKind").value, n = +$("#exN").value, t = +$("#exT").value; examStart(k, n, t); };
     return;
   }
@@ -479,9 +483,9 @@ function renderExam(){
     const list = x.items.map((qi,pos)=>({qi,pos,ok:x.ans[pos]===QUIZ[qi].c})).filter(e=>examView==="all" || !e.ok);
     p.innerHTML = `<div class="qcard result">
         <span class="label">Auswertung der Simulation</span>
-        <div class="grade ${g>4?"fail":""}">${g}</div>
+        <div class="grade ${g==="✗"?"fail":""}">${g}</div>
         <div class="big">${x.right} / ${n}</div>
-        <p style="margin:0">${pct} % richtig · ${g<=4?"bestanden":"nicht bestanden"} · Zeit ${mmss(used)} von ${mmss(x.dur)}</p>
+        <p style="margin:0">${pct} % richtig · ${g!=="✗"?"bestanden":"nicht bestanden"} · Zeit ${mmss(used)} von ${mmss(x.dur)}</p>
         <div class="breakdown">${Object.entries(byT).map(([t,v])=>`<div class="line"><span>${esc(topicName(t))}</span><span class="mono" style="text-align:right">${v.r}/${v.n}</span><div class="bar" style="--bc:var(--t-${t})"><i style="width:${v.r/v.n*100}%"></i></div></div>`).join("")}</div>
         <div class="row" style="justify-content:center"><button class="btn primary" id="exNew">Neue Simulation</button><button class="btn again" id="exWrong">Fehler im Quiz wiederholen</button></div>
       </div>
@@ -534,7 +538,7 @@ function examGo(pos){ const x = state.examRun; if(pos<0 || pos>=x.items.length) 
 
 /* ---------- Rechner ---------- */
 const CALCS = [
-  {id:"unter", title:"Unterversicherung", desc:"Proportionalregel nach § 75 VVG.", fields:[["Schaden in €","20000"],["Versicherungssumme in €","150000"],["Versicherungswert in €","200000"]],
+  {id:"unter", title:"Unterversicherung", desc:"Entschädigung = Schaden × Versicherungssumme ÷ Versicherungswert.", fields:[["Schaden in €","20000"],["Versicherungssumme in €","150000"],["Versicherungswert in €","200000"]],
    run:([s,vs,vw])=>{ if(vs>=vw) return [eur(s), "keine Unterversicherung: voller Ersatz"]; const e = s*vs/vw; return [eur(e), `${fmt(s)} × ${fmt(vs)} ÷ ${fmt(vw)} · Kürzung ${eur(s-e)} (${fmt((1-vs/vw)*100,1)} %)`]; }},
   {id:"inv", title:"Invaliditätsleistung", desc:"Grundsumme × Invaliditätsgrad mit Progression (Staffel laut Proximus 5).", fields:[["Grundsumme in €","100000"],["Invaliditätsgrad in %","60"],["Progression",["einfach","U 225","U 350","U 500"]]],
    run:([g,ig,prog])=>{
@@ -544,10 +548,6 @@ const CALCS = [
      const p = a*f[0] + b*f[1] + c*f[2];
      return [eur(g*p/100), prog==="einfach" ? `${fmt(ig)} % von ${eur(g)}` : `${fmt(a)} × ${f[0]} + ${fmt(b)} × ${f[1]} + ${fmt(c)} × ${f[2]} = ${fmt(p)} %`];
    }},
-  {id:"zins", title:"Zinsen (kaufmännisch)", desc:"Z = K × p × t ÷ 36.000, Monat mit 30 Tagen.", fields:[["Kapital in €","10000"],["Zinssatz in % p. a.","4"],["Tage","90"]],
-   run:([k,p,t])=>[eur(k*p*t/36000), `${fmt(k)} × ${fmt(p,2)} × ${fmt(t)} ÷ 36.000 · Endkapital ${eur(k + k*p*t/36000)}`]},
-  {id:"spar", title:"Sparplan mit Zinseszins", desc:"Monatliche Einzahlung, monatliche Verzinsung.", fields:[["Startkapital in €","0"],["Monatliche Rate in €","100"],["Rendite in % p. a.","5"],["Laufzeit in Jahren","20"]],
-   run:([k,r,p,j])=>{ const n = Math.round(j*12), i = p/100/12, q = Math.pow(1+i,n); const end = k*q + (i ? r*(q-1)/i : r*n); const ein = k + r*n; return [eur(end), `eingezahlt ${eur(ein)} · Ertrag ${eur(end-ein)}`]; }},
   {id:"afa", title:"Lineare Abschreibung", desc:"Monatsgenau im ersten Jahr, mit optionalem Verkauf.", fields:[["Anschaffungskosten in €","20000"],["Nutzungsdauer in Jahren","5"],["Anschaffungsmonat (1–12)","1"],["Restbuchwert am Ende von Jahr","3"],["Verkaufspreis in € (optional)","9000"]],
    run:([ak,nd,m,y,vk])=>{
      const ja = ak/nd, first = ja*(13-Math.min(12,Math.max(1,Math.round(m))))/12;
@@ -559,15 +559,13 @@ const CALCS = [
   {id:"fonds", title:"Fondsanteile", desc:"Ausgabepreis = Anteilwert × (1 + Ausgabeaufschlag).", fields:[["Anlagebetrag in €","10000"],["Anteilwert (Rücknahmepreis) in €","50"],["Ausgabeaufschlag in %","4,25"]],
    run:([b,w,aa])=>{ const ap = w*(1+aa/100), n = b/ap; return [fmt(n,3)+" Anteile", `Ausgabepreis ${eur(ap)} · angelegt ${eur(n*w)} · Aufschlag ${eur(b-n*w)}`]; }},
   {id:"bezug", title:"Wert des Bezugsrechts", desc:"BR = (Kurs alt − Emissionskurs) ÷ (Bezugsverhältnis + 1).", fields:[["Kurs der alten Aktie in €","73,10"],["Emissionskurs in €","59"],["Bezugsverhältnis alt","4"],["Bezugsverhältnis neu","1"]],
-   run:([ka,ke,a,n])=>{ const br = (ka-ke)/(a/n+1); return [eur(br), `(${fmt(ka,2)} − ${fmt(ke,2)}) ÷ (${fmt(a)}/${fmt(n)} + 1) · Mischkurs ${eur(ka-br)}`]; }},
-  {id:"quote", title:"Versicherungskennzahlen", desc:"Quoten bezogen auf die verdienten Beiträge.", fields:[["Beiträge","618,5"],["Schadenaufwand","492"],["Kosten (Verwaltung + Abschluss)","120"]],
-   run:([b,s,k])=>{ const sq = s/b*100, kq = k/b*100; return [`${fmt(sq+kq,1)} % Combined Ratio`, `Schadenquote ${fmt(sq,1)} % · Kostenquote ${fmt(kq,1)} %${sq+kq>100?" · versicherungstechnischer Verlust":""}`]; }},
-  {id:"be", title:"Gewinnschwelle", desc:"Break-even = Fixkosten ÷ Deckungsbeitrag je Stück.", fields:[["Fixkosten in €","12000"],["Preis je Stück in €","50"],["Variable Kosten je Stück in €","20"]],
-   run:([f,p,v])=>{ const db = p-v; if(db<=0) return ["–","Deckungsbeitrag muss positiv sein"]; return [fmt(Math.ceil(f/db))+" Stück", `DB je Stück ${eur(db)} · genau ${fmt(f/db,2)} Stück`]; }}
+   run:([ka,ke,a,n])=>{ const br = (ka-ke)/(a/n+1); return [eur(br), `(${fmt(ka,2)} − ${fmt(ke,2)}) ÷ (${fmt(a)}/${fmt(n)} + 1)`]; }},
+  {id:"quote", title:"Versicherungskennzahlen", desc:"Quote = Aufwand × 100 ÷ Beiträge, Combined Ratio = (Schaden + Kosten) × 100 ÷ Beiträge.", fields:[["Beiträge","618,5"],["Schadenaufwand","492"],["Verwaltungskosten","120"]],
+   run:([b,s,k])=>{ const sq = s/b*100, kq = k/b*100; return [`${fmt(sq+kq,1)} % Combined Ratio`, `Schadenquote ${fmt(sq,1)} % · Verwaltungskostenquote ${fmt(kq,1)} %`]; }},
 ];
 function renderCalc(){
   const p = $("#panel-calc");
-  p.innerHTML = `<p class="muted" style="margin:0">Rechenhilfen zu den typischen Prüfungsaufgaben. Zahlen kannst du mit Komma oder Punkt eingeben. Die Vorbelegungen stammen aus Aufgaben in Quiz und Lernzetteln.</p>
+  p.innerHTML = `<p class="muted" style="margin:0">Rechenhilfen zu den typischen Prüfungsaufgaben. Zahlen kannst du mit Komma oder Punkt eingeben. Formeln und Vorbelegungen stammen aus deinen Lernzetteln, Karten und Quizaufgaben.</p>
     <div class="calcs">${CALCS.map(c=>`<div class="box-card calc" data-c="${c.id}"><h3>${esc(c.title)}</h3><p class="d">${esc(c.desc)}</p>
       <div class="fields">${c.fields.map(([l,v],i)=>`<label>${esc(l)}${Array.isArray(v)?`<select data-i="${i}">${v.map(o=>`<option>${esc(o)}</option>`).join("")}</select>`:`<input type="text" inputmode="decimal" data-i="${i}" value="${esc(v)}">`}</label>`).join("")}</div>
       <div class="out" aria-live="polite"><b></b><small></small></div></div>`).join("")}</div>`;

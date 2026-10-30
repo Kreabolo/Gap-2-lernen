@@ -1,6 +1,6 @@
 // Offline-Cache für den GAP II Trainer. Version wird bei jedem Build erneuert.
-const CACHE = 'gap2-202610301200';
-const CORE = ['./', 'index.html', 'css/app.css', 'js/inhalte.js', 'js/inhalte-extra.js', 'js/app.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
+const CACHE = 'gap2-202610301400';
+const CORE = ['./', 'index.html', 'css/app.css', 'js/inhalte.js', 'js/app.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).then(() => self.skipWaiting()));
 });

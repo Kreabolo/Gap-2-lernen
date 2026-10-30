@@ -9,14 +9,14 @@ Lern-App für die Abschlussprüfung Teil 2 (GAP II) Kaufmann/-frau für Versiche
 - **Karteikarten:** Leitner-System mit „Nochmal / Schwer / Gewusst“, Wischgesten, Markieren mit Stern.
 - **Quiz:** gemischte Antworten, Modi „Neue Fragen“ und „Fehler wiederholen“, Note nach IHK-Schlüssel.
 - **Prüfung:** Simulation mit Zeitlimit, Fragen nach Prüfungspunkten gewichtet, Auswertung je Thema und alle Lösungswege.
-- **Rechner:** Unterversicherung, Invaliditätsleistung mit Progression, Zinsen, Sparplan, Abschreibung, Fondsanteile, Bezugsrecht, Kennzahlen, Gewinnschwelle.
+- **Rechner:** Unterversicherung, Invaliditätsleistung mit Progression, Abschreibung mit Verkauf, Fondsanteile, Bezugsrecht, Versicherungskennzahlen.
 - **Suche** über alles (Taste `/`), Hell/Dunkel, Sicherung des Lernstands als Datei.
 
 ## Aufbau
 
 - `index.html`: Grundgerüst
 - `css/app.css`: Gestaltung
-- `js/inhalte.js`, `js/inhalte-extra.js`: Lerninhalte. Neue Karten und Fragen nur hinten anhängen, weil der Lernstand über die Position gespeichert wird.
+- `js/inhalte.js`: Lerninhalte aus den GAP2-Unterlagen. Neue Karten und Fragen nur hinten anhängen, weil der Lernstand über die Position gespeichert wird.
 - `js/app.js`: App-Logik
 - `sw.js`: Offline-Cache (bei Änderungen die Version in `CACHE` erhöhen)
 
