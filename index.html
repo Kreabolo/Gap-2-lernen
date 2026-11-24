@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Public+Sans:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@500&display=swap">
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/app.css?v=20261124b">
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -105,12 +105,12 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="js/inhalte.js"></script>
-<script src="js/app.js"></script>
-<script src="js/wiso-daten.js"></script>
-<script src="js/wiso.js"></script>
+<script src="js/inhalte.js?v=20261124b"></script>
+<script src="js/app.js?v=20261124b"></script>
+<script src="js/wiso-daten.js?v=20261124b"></script>
+<script src="js/wiso.js?v=20261124b"></script>
 <script>
-if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+if('serviceWorker' in navigator){var swHad=!!navigator.serviceWorker.controller,swDone=false;navigator.serviceWorker.addEventListener('controllerchange',function(){if(swHad&&!swDone){swDone=true;location.reload();}});window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){r.update();}).catch(function(){});});}
 </script>
 </body>
 </html>
