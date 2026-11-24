@@ -328,3 +328,36 @@ footer{color:var(--ink-soft);font-size:.8rem;border-top:1px solid var(--line);pa
   .sum>summary .tog{display:none}
   .keys{position:static}
 }
+
+/* ---------- WiSo-Prüfungstrainer ---------- */
+#panel-wiso{display:flex;flex-direction:column;gap:16px}
+#panel-wiso[hidden]{display:none}
+.wiso-intro h3{margin:4px 0 6px}
+.wiso-intro p{margin:0 0 12px;max-width:70ch}
+.wiso-filter .topics{flex-wrap:wrap;overflow:visible;margin-inline:0;padding-inline:0}
+.wsit{white-space:pre-line;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:.92rem;color:var(--ink-soft);max-width:80ch}
+.wtype{font-size:.74rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em}
+.wlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.wlist li{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;font-size:.94rem}
+.wlist .k{border:1px solid var(--line);border-radius:6px;display:grid;place-items:center;height:24px;background:var(--sheet);font-size:.8rem}
+.wslots{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.wslot{display:grid;grid-template-columns:72px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);background:var(--paper);border-radius:10px;padding:8px 10px}
+.wslot select{width:100%;padding:6px 8px}
+.wslot.right{background:var(--ok-bg);border-color:var(--ok)}
+.wslot.wrong{background:var(--bad-bg);border-color:var(--bad)}
+.wfix{color:var(--ok);font-size:1rem}
+.wnum{align-items:center}
+.wnum input{max-width:220px;font-size:1.1rem}
+.explain.ok{border-left-color:var(--ok)}
+.explain.bad{border-left-color:var(--bad)}
+.explain p{margin:8px 0 0}
+.wsol{white-space:normal}
+.wmap{margin:8px 0 0;padding-left:20px;white-space:normal}
+.wmap li{margin:2px 0}
+.wrev{border-top:1px solid var(--line);padding:8px 0}
+.wrev summary{cursor:pointer;display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:8px;align-items:start;font-size:.92rem}
+.wrev .wrs{font-weight:700}
+.wrev.ok .wrs{color:var(--ok)}
+.wrev.bad .wrs{color:var(--bad)}
+.wrev[open]{display:flex;flex-direction:column;gap:10px}
+.wrev .qtext{font-size:1.05rem}
