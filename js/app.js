@@ -2,7 +2,7 @@
 
 /* ---------- Zustand ---------- */
 const STORE_KEY = "gap2-trainer-v1";
-const MODES = ["home","sum","cards","quiz","exam","calc"];
+const MODES = ["home","sum","cards","quiz","wiso","exam","calc"];
 const FILTER_MODES = ["sum","cards","quiz"];
 function defaults(){
   return {topics:[], mode:"home", cards:{}, quiz:{answered:0, right:0, wrong:{}, ok:{}, byT:{}},
@@ -113,6 +113,7 @@ function setMode(m){
   MODES.forEach(k=> $("#panel-"+k).hidden = k!==m);
   $("#topicbar").hidden = !FILTER_MODES.includes(m);
   if(m==="home") renderHome();
+  if(m==="wiso" && typeof renderWiso==="function") renderWiso();
   try{ history.replaceState(null,"","#"+m); }catch(e){}
 }
 document.querySelectorAll("nav.modes button").forEach(b=>b.onclick=()=>setMode(b.dataset.mode));

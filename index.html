@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f6b66">
-<meta name="description" content="Lern-App für die GAP II Versicherungen und Finanzanlagen: Lernzettel, Karteikarten, Quiz, Prüfungssimulation und Rechner.">
+<meta name="description" content="Lern-App für die GAP II Versicherungen und Finanzanlagen: Lernzettel, Karteikarten, Quiz, WiSo-Prüfungstrainer, Prüfungssimulation und Rechner.">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -24,6 +24,7 @@
   <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H11v17H5.5A1.5 1.5 0 0 0 4 21.5zM20 4.5A1.5 1.5 0 0 0 18.5 3H13v17h5.5a1.5 1.5 0 0 1 1.5 1.5z"/></symbol>
   <symbol id="i-cards" viewBox="0 0 24 24"><rect x="3" y="6" width="14" height="15" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v13"/></symbol>
   <symbol id="i-quiz" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.5v.01"/></symbol>
+  <symbol id="i-wiso" viewBox="0 0 24 24"><path d="M4 20h16M6 20V10M10 20V6M14 20v-8M18 20V4"/></symbol>
   <symbol id="i-timer" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/></symbol>
   <symbol id="i-calc" viewBox="0 0 24 24"><rect x="5" y="2.5" width="14" height="19" rx="2"/><path d="M8 6.5h8M8.5 11h.01M12 11h.01M15.5 11h.01M8.5 14.5h.01M12 14.5h.01M15.5 14.5h.01M8.5 18h.01M12 18h.01M15.5 18h.01"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
@@ -59,6 +60,7 @@
     <button role="tab" data-mode="sum"><svg><use href="#i-book"/></svg><span>Lernzettel</span></button>
     <button role="tab" data-mode="cards"><svg><use href="#i-cards"/></svg><span>Karten</span><span class="count" id="cntCards"></span></button>
     <button role="tab" data-mode="quiz"><svg><use href="#i-quiz"/></svg><span>Quiz</span><span class="count" id="cntQuiz"></span></button>
+    <button role="tab" data-mode="wiso"><svg><use href="#i-wiso"/></svg><span>WiSo</span><span class="count" id="cntWiso"></span></button>
     <button role="tab" data-mode="exam"><svg><use href="#i-timer"/></svg><span>Prüfung</span></button>
     <button role="tab" data-mode="calc"><svg><use href="#i-calc"/></svg><span>Rechner</span></button>
   </nav>
@@ -73,6 +75,7 @@
     <section class="panel" id="panel-sum" hidden></section>
     <section class="panel" id="panel-cards" hidden></section>
     <section class="panel" id="panel-quiz" hidden></section>
+    <section class="panel" id="panel-wiso" hidden></section>
     <section class="panel" id="panel-exam" hidden></section>
     <section class="panel" id="panel-calc" hidden></section>
   </main>
@@ -104,6 +107,8 @@
 
 <script src="js/inhalte.js"></script>
 <script src="js/app.js"></script>
+<script src="js/wiso-daten.js"></script>
+<script src="js/wiso.js"></script>
 <script>
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
 </script>

@@ -8,6 +8,7 @@ Lern-App für die Abschlussprüfung Teil 2 (GAP II) Kaufmann/-frau für Versiche
 - **Lernzettel:** alle Themen mit Volltextsuche, „gelesen“-Markierung und Druckansicht.
 - **Karteikarten:** Leitner-System mit „Nochmal / Schwer / Gewusst“, Wischgesten, Markieren mit Stern.
 - **Quiz:** gemischte Antworten, Modi „Neue Fragen“ und „Fehler wiederholen“, Note nach IHK-Schlüssel.
+- **WiSo:** alle 150 Aufgaben der IHK-WiSo-Prüfungen Sommer 2024 bis Sommer 2026 im Original, Lösung laut IHK-Lösungsbogen mit Erklärung. Originalprüfung mit 60-Minuten-Timer und Note, Üben nach Prüfung und Thema, Fehler wiederholen.
 - **Prüfung:** Simulation mit Zeitlimit, Fragen nach Prüfungspunkten gewichtet, Auswertung je Thema und alle Lösungswege.
 - **Rechner:** Unterversicherung, Invaliditätsleistung mit Progression, Abschreibung mit Verkauf, Fondsanteile, Bezugsrecht, Versicherungskennzahlen.
 - **Suche** über alles (Taste `/`), Hell/Dunkel, Sicherung des Lernstands als Datei.
@@ -18,6 +19,8 @@ Lern-App für die Abschlussprüfung Teil 2 (GAP II) Kaufmann/-frau für Versiche
 - `css/app.css`: Gestaltung
 - `js/inhalte.js`: Lerninhalte aus den GAP2-Unterlagen. Neue Karten und Fragen nur hinten anhängen, weil der Lernstand über die Position gespeichert wird.
 - `js/app.js`: App-Logik
+- `js/wiso-daten.js`: WiSo-Aufgaben S24–S26 mit IHK-Lösung und Erklärung
+- `js/wiso.js`: WiSo-Prüfungstrainer (Lernstand in `state.wiso`)
 - `sw.js`: Offline-Cache (bei Änderungen die Version in `CACHE` erhöhen)
 
 Die App läuft im Browser und lässt sich auf dem Handy oder PC installieren. Nach dem ersten Öffnen funktioniert sie auch offline. Der Lernstand bleibt lokal im Browser des jeweiligen Geräts gespeichert.
